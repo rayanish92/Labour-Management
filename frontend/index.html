@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Labour Manager</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-green-50 text-gray-800 font-sans p-4 mb-20">
+
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-green-700 text-white p-4 rounded-lg shadow mb-6 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">🌾 Labour Manager</h1>
+            <button onclick="installPWA()" id="installBtn" class="hidden bg-white text-green-700 px-3 py-1 rounded font-bold text-sm">Install App</button>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg shadow mb-6 border-l-4 border-green-500">
+            <h2 class="font-bold text-lg mb-2">⚙️ Daily Rates Config</h2>
+            <div class="flex gap-4 items-end">
+                <div>
+                    <label class="block text-xs text-gray-500">Wage (₹)</label>
+                    <input type="number" id="configWage" class="border p-2 rounded w-24">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500">Rice (Kg)</label>
+                    <input type="number" id="configRice" class="border p-2 rounded w-24">
+                </div>
+                <button onclick="saveConfig()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <h2 class="font-bold text-lg mb-2">➕ Add New Labourer</h2>
+            <div class="flex gap-2">
+                <input type="text" id="newLabourName" placeholder="Labour Name" class="border p-2 rounded flex-1">
+                <select id="newLabourType" class="border p-2 rounded">
+                    <option value="all_time">All-Time</option>
+                    <option value="occasional">Occasional</option>
+                </select>
+                <button onclick="addLabour()" class="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg shadow mb-6">
+            <h2 class="font-bold text-lg mb-2">📅 Attendance Filters</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-600">Select Date</label>
+                    <input type="date" id="attendanceDate" class="border p-2 rounded w-full">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-600">Season (For Occasional)</label>
+                    <select id="attendanceSeason" class="border p-2 rounded w-full">
+                        <option value="none">None</option>
+                        <option value="boro_chas">Boro Chas</option>
+                        <option value="boro_harvest">Boro Harvest</option>
+                        <option value="borsa_chas">Borsa Chas</option>
+                        <option value="borsa_harvest">Borsa Harvest</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="labourLists">
+            </div>
+
+    </div>
+
+    <script>
+        // --- 1. SETUP & CONFIG ---
+        // IMPORTANT: We will update this URL after Render deployment
+        const API_URL = "https://YOUR-BACKEND-RENDER-URL.onrender.com/api"; 
+        
+        // Set today's date in the date picker automatically
+        document.getElementById('attendanceDate').valueAsDate = new Date();
+
+        // --- 2. FETCH DATA ---
+        async function loadData() {
+            try {
+                // Get Config
+                const confRes = await fetch(`${API_URL}/config`);
+                const conf = await confRes.json();
+                document.getElementById('configWage').value = conf.daily_wage || 0;
+                document.getElementById('configRice').value = conf.daily_rice_kg || 0;
+
+                // Get Labours
+                const labRes = await fetch(`${API_URL}/labours`);
+                const labours = await labRes.json();
+                renderLabours(labours);
+            } catch (err) {
+                console.log("Waiting for backend connection...");
+            }
+        }
+
+        // --- 3. RENDER UI ---
+        function renderLabours(labours) {
+            const container = document.getElementById('labourLists');
+            const allTime = labours.filter(l => l.type === 'all_time');
+            const occasional = labours.filter(l => l.type === 'occasional');
+
+            container.innerHTML = `
+                <h2 class="font-bold text-xl mb-3 border-b-2 border-gray-300 pb-1">👷‍♂️ All-Time Labours</h2>
+                ${allTime.map(createLabourCard).join('') || '<p class="text-sm text-gray-500 mb-4">No all-time labours added.</p>'}
+                
+                <h2 class="font-bold text-xl mt-6 mb-3 border-b-2 border-gray-300 pb-1">🌾 Occasional Labours</h2>
+                ${occasional.map(createLabourCard).join('') || '<p class="text-sm text-gray-500">No occasional labours added.</p>'}
+            `;
+        }
+
+        function createLabourCard(l) {
+            return `
+            <div class="bg-white p-4 rounded-lg shadow mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-lg text-green-800">${l.name}</h3>
+                    <span class="text-xs bg-gray-200 px-2 py-1 rounded">${l.days_worked} Days</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 text-sm bg-gray-50 p-2 rounded mb-3">
+                    <p>Earned: ₹${l.amount_earned}</p>
+                    <p class="text-red-600">Taken: ₹${l.amount_taken}</p>
+                    <p class="font-bold text-blue-600">Due: ₹${l.amount_due}</p>
+                    <hr class="col-span-2">
+                    <p>Rice Earned: ${l.rice_earned}kg</p>
+                    <p class="text-red-600">Rice Taken: ${l.rice_taken}kg</p>
+                    <p class="font-bold text-blue-600">Rice Due: ${l.rice_due}kg</p>
+                </div>
+
+                <div class="flex gap-2 mb-2">
+                    <button onclick="markAttendance('${l.id}', 'present')" class="flex-1 bg-green-500 text-white py-1 rounded text-sm shadow">✔️ Present</button>
+                    <button onclick="markAttendance('${l.id}', 'absent')" class="flex-1 bg-red-400 text-white py-1 rounded text-sm shadow">❌ Absent</button>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 border border-blue-500 text-blue-600 py-1 rounded text-xs">💸 Give Cash</button>
+                    <button onclick="addTransaction('${l.id}', 'rice')" class="flex-1 border border-orange-500 text-orange-600 py-1 rounded text-xs">🍚 Give Rice</button>
+                </div>
+            </div>`;
+        }
+
+        // --- 4. ACTIONS (Talking to Backend) ---
+        async function saveConfig() {
+            const wage = document.getElementById('configWage').value;
+            const rice = document.getElementById('configRice').value;
+            await fetch(`${API_URL}/config`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({wage, rice})
+            });
+            alert("Rates Saved!");
+            loadData();
+        }
+
+        async function addLabour() {
+            const name = document.getElementById('newLabourName').value;
+            const type = document.getElementById('newLabourType').value;
+            if(!name) return alert("Enter a name");
+            
+            await fetch(`${API_URL}/labours`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name, type})
+            });
+            document.getElementById('newLabourName').value = '';
+            loadData();
+        }
+
+        async function markAttendance(id, status) {
+            const date = document.getElementById('attendanceDate').value;
+            const season = document.getElementById('attendanceSeason').value;
+            
+            await fetch(`${API_URL}/attendance`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({labour_id: id, date, status, season})
+            });
+            loadData();
+        }
+
+        async function addTransaction(id, type) {
+            const amount = prompt(`Enter ${type === 'money' ? 'Cash Amount (₹)' : 'Rice Amount (Kg)'} given:`);
+            if(!amount || isNaN(amount)) return;
+
+            await fetch(`${API_URL}/transactions`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({labour_id: id, type, amount})
+            });
+            loadData();
+        }
+
+        // --- 5. PWA SETUP ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').classList.remove('hidden');
+        });
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+            }
+        }
+
+        // Run on load
+        loadData();
+    </script>
+</body>
+</html>
