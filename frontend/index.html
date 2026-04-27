@@ -16,18 +16,39 @@
         </div>
 
         <div class="bg-white p-4 rounded-lg shadow mb-6 border-l-4 border-green-500">
-            <h2 class="font-bold text-lg mb-2">⚙️ Daily Rates Config</h2>
-            <div class="flex gap-4 items-end">
-                <div>
-                    <label class="block text-xs text-gray-500">Wage (₹)</label>
-                    <input type="number" id="configWage" class="border p-2 rounded w-24">
+            <h2 class="font-bold text-lg mb-4">⚙️ Daily Rates Config</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="bg-blue-50 p-3 rounded border border-blue-100">
+                    <h3 class="font-bold text-sm text-blue-800 mb-2">👷‍♂️ All-Time Workers</h3>
+                    <div class="flex gap-2">
+                        <div>
+                            <label class="block text-xs text-gray-500">Wage (₹)</label>
+                            <input type="number" id="allTimeWage" class="border p-2 rounded w-full">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500">Rice (Kg)</label>
+                            <input type="number" id="allTimeRice" class="border p-2 rounded w-full">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs text-gray-500">Rice (Kg)</label>
-                    <input type="number" id="configRice" class="border p-2 rounded w-24">
+                
+                <div class="bg-orange-50 p-3 rounded border border-orange-100">
+                    <h3 class="font-bold text-sm text-orange-800 mb-2">🌾 Occasional Workers</h3>
+                    <div class="flex gap-2">
+                        <div>
+                            <label class="block text-xs text-gray-500">Wage (₹)</label>
+                            <input type="number" id="occasionalWage" class="border p-2 rounded w-full">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500">Rice (Kg)</label>
+                            <input type="number" id="occasionalRice" class="border p-2 rounded w-full">
+                        </div>
+                    </div>
                 </div>
-                <button onclick="saveConfig()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
             </div>
+            
+            <button onclick="saveConfig()" class="bg-green-600 text-white px-4 py-2 rounded w-full font-bold shadow">Save All Rates</button>
         </div>
 
         <div class="bg-white p-4 rounded-lg shadow mb-6">
@@ -62,29 +83,25 @@
             </div>
         </div>
 
-        <div id="labourLists">
-            </div>
-
+        <div id="labourLists"></div>
     </div>
 
     <script>
         // --- 1. SETUP & CONFIG ---
-        // IMPORTANT: We will update this URL after Render deployment
         const API_URL = "https://labour-management-gopa.onrender.com/api"; 
         
-        // Set today's date in the date picker automatically
         document.getElementById('attendanceDate').valueAsDate = new Date();
 
         // --- 2. FETCH DATA ---
         async function loadData() {
             try {
-                // Get Config
                 const confRes = await fetch(`${API_URL}/config`);
                 const conf = await confRes.json();
-                document.getElementById('configWage').value = conf.daily_wage || 0;
-                document.getElementById('configRice').value = conf.daily_rice_kg || 0;
+                document.getElementById('allTimeWage').value = conf.all_time_wage || 0;
+                document.getElementById('allTimeRice').value = conf.all_time_rice || 0;
+                document.getElementById('occasionalWage').value = conf.occasional_wage || 0;
+                document.getElementById('occasionalRice').value = conf.occasional_rice || 0;
 
-                // Get Labours
                 const labRes = await fetch(`${API_URL}/labours`);
                 const labours = await labRes.json();
                 renderLabours(labours);
@@ -110,10 +127,10 @@
 
         function createLabourCard(l) {
             return `
-            <div class="bg-white p-4 rounded-lg shadow mb-4">
+            <div class="bg-white p-4 rounded-lg shadow mb-4 border-l-4 ${l.type === 'all_time' ? 'border-blue-500' : 'border-orange-500'}">
                 <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-lg text-green-800">${l.name}</h3>
-                    <span class="text-xs bg-gray-200 px-2 py-1 rounded">${l.days_worked} Days</span>
+                    <h3 class="font-bold text-lg text-gray-800">${l.name}</h3>
+                    <span class="text-xs bg-gray-200 px-2 py-1 rounded font-bold">${l.days_worked} Days</span>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-2 text-sm bg-gray-50 p-2 rounded mb-3">
@@ -132,21 +149,26 @@
                 </div>
                 
                 <div class="flex gap-2">
-                    <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 border border-blue-500 text-blue-600 py-1 rounded text-xs">💸 Give Cash</button>
-                    <button onclick="addTransaction('${l.id}', 'rice')" class="flex-1 border border-orange-500 text-orange-600 py-1 rounded text-xs">🍚 Give Rice</button>
+                    <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 border border-blue-500 text-blue-600 py-1 rounded text-xs hover:bg-blue-50">💸 Give Cash</button>
+                    <button onclick="addTransaction('${l.id}', 'rice')" class="flex-1 border border-orange-500 text-orange-600 py-1 rounded text-xs hover:bg-orange-50">🍚 Give Rice</button>
                 </div>
             </div>`;
         }
 
-        // --- 4. ACTIONS (Talking to Backend) ---
+        // --- 4. ACTIONS ---
         async function saveConfig() {
-            const wage = document.getElementById('configWage').value;
-            const rice = document.getElementById('configRice').value;
+            const payload = {
+                all_time_wage: document.getElementById('allTimeWage').value,
+                all_time_rice: document.getElementById('allTimeRice').value,
+                occasional_wage: document.getElementById('occasionalWage').value,
+                occasional_rice: document.getElementById('occasionalRice').value
+            };
+            
             await fetch(`${API_URL}/config`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({wage, rice})
+                body: JSON.stringify(payload)
             });
-            alert("Rates Saved!");
+            alert("All Rates Saved!");
             loadData();
         }
 
@@ -185,10 +207,7 @@
             loadData();
         }
 
-        // --- 5. PWA SETUP ---
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -202,7 +221,6 @@
             }
         }
 
-        // Run on load
         loadData();
     </script>
 </body>
