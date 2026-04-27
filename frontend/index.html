@@ -7,7 +7,6 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Smooth transitions for tabs */
         .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -28,10 +27,20 @@
             <button onclick="switchTab('tab-occasional')" id="btn-occasional" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm text-gray-500 hover:bg-gray-100 transition">🌾 Occasional</button>
         </div>
 
-        <div id="globalFilters" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-xl shadow-sm mb-4">
+        <div id="searchFilters" class="hidden flex gap-2 mb-4">
+            <input type="text" id="searchWorker" onkeyup="renderLabours()" placeholder="🔍 Search by worker name..." class="border border-gray-300 p-3 rounded-xl w-full shadow-sm focus:ring-2 focus:ring-green-500 outline-none">
+            <select id="filterYear" onchange="loadData()" class="border border-gray-300 p-3 rounded-xl shadow-sm bg-white font-bold text-green-700 focus:ring-2 focus:ring-green-500 outline-none">
+                <option value="all">All Years</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+            </select>
+        </div>
+
+        <div id="globalFilters" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-xl shadow-sm mb-6">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-yellow-800 mb-1">📅 Filter Date</label>
+                    <label class="block text-xs font-bold text-yellow-800 mb-1">📅 Action Date</label>
                     <input type="date" id="attendanceDate" class="border border-yellow-300 p-2 rounded-lg w-full bg-white shadow-sm">
                 </div>
                 <div>
@@ -116,28 +125,26 @@
 
         // --- 2. TAB LOGIC ---
         function switchTab(tabId) {
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            // Reset all buttons
             document.querySelectorAll('[id^="btn-"]').forEach(b => {
                 b.classList.remove('bg-green-100', 'text-green-800');
                 b.classList.add('text-gray-500');
             });
             
-            // Show active tab
             document.getElementById(tabId).classList.add('active');
             
-            // Highlight active button
             const btnId = tabId.replace('tab-', 'btn-');
             document.getElementById(btnId).classList.remove('text-gray-500');
             document.getElementById(btnId).classList.add('bg-green-100', 'text-green-800');
 
-            // Show/Hide Date Filters based on tab
             const filters = document.getElementById('globalFilters');
+            const searchUI = document.getElementById('searchFilters');
             if (tabId === 'tab-admin') {
                 filters.classList.add('hidden');
+                searchUI.classList.add('hidden');
             } else {
                 filters.classList.remove('hidden');
+                searchUI.classList.remove('hidden');
             }
         }
 
@@ -151,24 +158,31 @@
                 document.getElementById('occasionalWage').value = conf.occasional_wage || 0;
                 document.getElementById('occasionalRice').value = conf.occasional_rice || 0;
 
-                const labRes = await fetch(`${API_URL}/labours`);
+                // NEW: Pass the year filter to the backend
+                const year = document.getElementById('filterYear').value;
+                const labRes = await fetch(`${API_URL}/labours?year=${year}`);
                 allLabours = await labRes.json();
+                
                 renderLabours();
             } catch (err) {
                 console.log("Waiting for connection...");
             }
         }
 
-        // --- 4. RENDER UI ---
+        // --- 4. RENDER UI (With Search Filtering) ---
         function renderLabours() {
             const allTimeList = document.getElementById('list-alltime');
             const occasionalList = document.getElementById('list-occasional');
             
-            const allTime = allLabours.filter(l => l.type === 'all_time');
-            const occasional = allLabours.filter(l => l.type === 'occasional');
+            // NEW: Apply text search filter
+            const searchTerm = document.getElementById('searchWorker').value.toLowerCase();
+            const filteredLabours = allLabours.filter(l => l.name.toLowerCase().includes(searchTerm));
+            
+            const allTime = filteredLabours.filter(l => l.type === 'all_time');
+            const occasional = filteredLabours.filter(l => l.type === 'occasional');
 
-            allTimeList.innerHTML = allTime.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No all-time workers yet.</p>';
-            occasionalList.innerHTML = occasional.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No occasional workers yet.</p>';
+            allTimeList.innerHTML = allTime.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
+            occasionalList.innerHTML = occasional.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
         }
 
         function createLabourCard(l) {
@@ -237,11 +251,9 @@
             });
             document.getElementById('newLabourName').value = '';
             loadData();
-            // Jump to the tab where we just added the worker
             switchTab(type === 'all_time' ? 'tab-alltime' : 'tab-occasional');
         }
 
-        // NEW: Edit & Delete Functions
         async function editLabour(id, currentName) {
             const newName = prompt("Enter new name for worker:", currentName);
             if (!newName || newName === currentName) return;
