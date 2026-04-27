@@ -54,6 +54,9 @@ def handle_labours():
         return jsonify({"message": "Labourer added!"})
     
     else:
+        # NEW: Catch the year filter from the app
+        year_filter = request.args.get('year', 'all')
+        
         config = config_db.find_one({"setting": "rates"}) or {}
         all_time_wage = config.get("all_time_wage", 0)
         all_time_rice = config.get("all_time_rice", 0)
@@ -65,7 +68,17 @@ def handle_labours():
         
         for lab in labours:
             lab_id = str(lab['_id'])
-            present_days = attendance_db.count_documents({"labour_id": lab_id, "status": "present"})
+            
+            # Setup database queries
+            att_query = {"labour_id": lab_id, "status": "present"}
+            txn_query = {"labour_id": lab_id}
+            
+            # Apply Year Filter if not set to 'all'
+            if year_filter != 'all':
+                att_query["date"] = {"$regex": f"^{year_filter}"}
+                txn_query["date"] = {"$regex": f"^{year_filter}"}
+                
+            present_days = attendance_db.count_documents(att_query)
             
             if lab["type"] == "all_time":
                 wage_rate = all_time_wage
@@ -77,7 +90,7 @@ def handle_labours():
             amount_earned = present_days * wage_rate
             rice_earned = present_days * rice_rate
             
-            txns = list(transactions_db.find({"labour_id": lab_id}))
+            txns = list(transactions_db.find(txn_query))
             amount_taken = sum(t['amount'] for t in txns if t['type'] == 'money')
             rice_taken = sum(t['amount'] for t in txns if t['type'] == 'rice')
             
@@ -95,11 +108,9 @@ def handle_labours():
             })
         return jsonify(results)
 
-# NEW: Edit and Delete Route
 @app.route('/api/labours/<lab_id>', methods=['PUT', 'DELETE'])
 def modify_labour(lab_id):
     if request.method == 'DELETE':
-        # Delete worker and clean up all their history
         labours_db.delete_one({"_id": ObjectId(lab_id)})
         attendance_db.delete_many({"labour_id": lab_id})
         transactions_db.delete_many({"labour_id": lab_id})
