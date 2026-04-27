@@ -67,7 +67,6 @@ def handle_labours():
             lab_id = str(lab['_id'])
             present_days = attendance_db.count_documents({"labour_id": lab_id, "status": "present"})
             
-            # Apply the correct rates based on worker type
             if lab["type"] == "all_time":
                 wage_rate = all_time_wage
                 rice_rate = all_time_rice
@@ -95,6 +94,24 @@ def handle_labours():
                 "rice_due": rice_earned - rice_taken
             })
         return jsonify(results)
+
+# NEW: Edit and Delete Route
+@app.route('/api/labours/<lab_id>', methods=['PUT', 'DELETE'])
+def modify_labour(lab_id):
+    if request.method == 'DELETE':
+        # Delete worker and clean up all their history
+        labours_db.delete_one({"_id": ObjectId(lab_id)})
+        attendance_db.delete_many({"labour_id": lab_id})
+        transactions_db.delete_many({"labour_id": lab_id})
+        return jsonify({"message": "Worker & records deleted"})
+        
+    if request.method == 'PUT':
+        data = request.json
+        labours_db.update_one(
+            {"_id": ObjectId(lab_id)},
+            {"$set": {"name": data['name']}}
+        )
+        return jsonify({"message": "Worker name updated"})
 
 @app.route('/api/attendance', methods=['POST'])
 def mark_attendance():
