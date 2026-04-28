@@ -21,25 +21,19 @@ transactions_db = db.transactions
 def handle_config():
     if request.method == 'POST':
         data = request.json
+        # Dynamically update only the fields sent in the request
         config_db.update_one(
             {"setting": "rates"}, 
-            {"$set": {
-                "all_time_wage": float(data.get('all_time_wage', 0)), 
-                "all_time_rice": float(data.get('all_time_rice', 0)),
-                "occasional_wage": float(data.get('occasional_wage', 0)),
-                "occasional_rice": float(data.get('occasional_rice', 0))
-            }}, 
+            {"$set": data}, 
             upsert=True
         )
         return jsonify({"message": "Rates updated successfully!"})
     else:
         config = config_db.find_one({"setting": "rates"}) or {}
-        return jsonify({
-            "all_time_wage": config.get("all_time_wage", 0),
-            "all_time_rice": config.get("all_time_rice", 0),
-            "occasional_wage": config.get("occasional_wage", 0),
-            "occasional_rice": config.get("occasional_rice", 0)
-        })
+        # Remove the MongoDB ID so it doesn't break the JSON response
+        if '_id' in config:
+            del config['_id']
+        return jsonify(config)
 
 @app.route('/api/labours', methods=['GET', 'POST'])
 def handle_labours():
@@ -54,14 +48,10 @@ def handle_labours():
         return jsonify({"message": "Labourer added!"})
     
     else:
-        # NEW: Catch the year filter from the app
         year_filter = request.args.get('year', 'all')
+        date_filter = request.args.get('date', datetime.now().strftime("%Y-%m-%d"))
         
         config = config_db.find_one({"setting": "rates"}) or {}
-        all_time_wage = config.get("all_time_wage", 0)
-        all_time_rice = config.get("all_time_rice", 0)
-        occasional_wage = config.get("occasional_wage", 0)
-        occasional_rice = config.get("occasional_rice", 0)
         
         labours = list(labours_db.find())
         results = []
@@ -69,27 +59,37 @@ def handle_labours():
         for lab in labours:
             lab_id = str(lab['_id'])
             
-            # Setup database queries
+            # 1. Fetch Today's Status (For Button Colors)
+            today_record = attendance_db.find_one({"labour_id": lab_id, "date": date_filter})
+            current_status = today_record['status'] if today_record else "none"
+            
+            # 2. Setup Year Queries
             att_query = {"labour_id": lab_id, "status": "present"}
             txn_query = {"labour_id": lab_id}
-            
-            # Apply Year Filter if not set to 'all'
             if year_filter != 'all':
                 att_query["date"] = {"$regex": f"^{year_filter}"}
                 txn_query["date"] = {"$regex": f"^{year_filter}"}
                 
-            present_days = attendance_db.count_documents(att_query)
-            
+            # 3. Calculate Earnings based on Worker Type
             if lab["type"] == "all_time":
-                wage_rate = all_time_wage
-                rice_rate = all_time_rice
-            else:
-                wage_rate = occasional_wage
-                rice_rate = occasional_rice
+                # Separate Harvest vs Non-Harvest days
+                att_harvest = attendance_db.count_documents({**att_query, "all_time_mode": "harvest"})
+                att_non = attendance_db.count_documents({**att_query, "all_time_mode": {"$ne": "harvest"}}) # $ne means 'not equal'
                 
-            amount_earned = present_days * wage_rate
-            rice_earned = present_days * rice_rate
+                wage_h = float(config.get("all_time_wage_harvest", 0))
+                rice_h = float(config.get("all_time_rice_harvest", 0))
+                wage_n = float(config.get("all_time_wage_non_harvest", 0))
+                rice_n = float(config.get("all_time_rice_non_harvest", 0))
+                
+                amount_earned = (att_harvest * wage_h) + (att_non * wage_n)
+                rice_earned = (att_harvest * rice_h) + (att_non * rice_n)
+                total_days = att_harvest + att_non
+            else:
+                total_days = attendance_db.count_documents(att_query)
+                amount_earned = total_days * float(config.get("occasional_wage", 0))
+                rice_earned = total_days * float(config.get("occasional_rice", 0))
             
+            # 4. Calculate Taken and Due
             txns = list(transactions_db.find(txn_query))
             amount_taken = sum(t['amount'] for t in txns if t['type'] == 'money')
             rice_taken = sum(t['amount'] for t in txns if t['type'] == 'rice')
@@ -98,7 +98,8 @@ def handle_labours():
                 "id": lab_id,
                 "name": lab["name"],
                 "type": lab["type"], 
-                "days_worked": present_days,
+                "current_status": current_status, # NEW: Sent to UI for button color
+                "days_worked": total_days,
                 "amount_earned": amount_earned,
                 "amount_taken": amount_taken,
                 "amount_due": amount_earned - amount_taken, 
@@ -114,15 +115,11 @@ def modify_labour(lab_id):
         labours_db.delete_one({"_id": ObjectId(lab_id)})
         attendance_db.delete_many({"labour_id": lab_id})
         transactions_db.delete_many({"labour_id": lab_id})
-        return jsonify({"message": "Worker & records deleted"})
-        
+        return jsonify({"message": "Deleted"})
     if request.method == 'PUT':
         data = request.json
-        labours_db.update_one(
-            {"_id": ObjectId(lab_id)},
-            {"$set": {"name": data['name']}}
-        )
-        return jsonify({"message": "Worker name updated"})
+        labours_db.update_one({"_id": ObjectId(lab_id)}, {"$set": {"name": data['name']}})
+        return jsonify({"message": "Updated"})
 
 @app.route('/api/attendance', methods=['POST'])
 def mark_attendance():
@@ -131,26 +128,26 @@ def mark_attendance():
         "labour_id": data['labour_id'],
         "date": data['date'], 
         "status": data['status'], 
-        "season": data.get('season', 'none') 
+        "season": data.get('season', 'none'),
+        "all_time_mode": data.get('all_time_mode', 'non_harvest') # NEW: Tracks if this day was a harvest day
     }
     attendance_db.update_one(
         {"labour_id": data['labour_id'], "date": data['date']},
         {"$set": record},
         upsert=True
     )
-    return jsonify({"message": f"Marked {data['status']} for {data['date']}"})
+    return jsonify({"message": "Attendance marked"})
 
 @app.route('/api/transactions', methods=['POST'])
 def add_transaction():
     data = request.json
-    record = {
+    transactions_db.insert_one({
         "labour_id": data['labour_id'],
         "type": data['type'],
         "amount": float(data['amount']),
         "date": datetime.now().strftime("%Y-%m-%d")
-    }
-    transactions_db.insert_one(record)
-    return jsonify({"message": f"{data['type'].capitalize()} recorded successfully!"})
+    })
+    return jsonify({"message": "Recorded"})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
