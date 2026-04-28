@@ -21,18 +21,11 @@ transactions_db = db.transactions
 def handle_config():
     if request.method == 'POST':
         data = request.json
-        # Dynamically update only the fields sent in the request
-        config_db.update_one(
-            {"setting": "rates"}, 
-            {"$set": data}, 
-            upsert=True
-        )
+        config_db.update_one({"setting": "rates"}, {"$set": data}, upsert=True)
         return jsonify({"message": "Rates updated successfully!"})
     else:
         config = config_db.find_one({"setting": "rates"}) or {}
-        # Remove the MongoDB ID so it doesn't break the JSON response
-        if '_id' in config:
-            del config['_id']
+        if '_id' in config: del config['_id']
         return jsonify(config)
 
 @app.route('/api/labours', methods=['GET', 'POST'])
@@ -52,16 +45,17 @@ def handle_labours():
         date_filter = request.args.get('date', datetime.now().strftime("%Y-%m-%d"))
         
         config = config_db.find_one({"setting": "rates"}) or {}
-        
         labours = list(labours_db.find())
         results = []
         
         for lab in labours:
             lab_id = str(lab['_id'])
             
-            # 1. Fetch Today's Status (For Button Colors)
+            # 1. Fetch Today's (or Selected Date's) Exact Record
             today_record = attendance_db.find_one({"labour_id": lab_id, "date": date_filter})
             current_status = today_record['status'] if today_record else "none"
+            current_mode = today_record.get('all_time_mode', 'none') if today_record else "none"
+            current_season = today_record.get('season', 'none') if today_record else "none"
             
             # 2. Setup Year Queries
             att_query = {"labour_id": lab_id, "status": "present"}
@@ -70,11 +64,13 @@ def handle_labours():
                 att_query["date"] = {"$regex": f"^{year_filter}"}
                 txn_query["date"] = {"$regex": f"^{year_filter}"}
                 
-            # 3. Calculate Earnings based on Worker Type
+            # 3. Calculate Earnings & Track Breakdowns
+            att_harvest = 0
+            att_non = 0
+            
             if lab["type"] == "all_time":
-                # Separate Harvest vs Non-Harvest days
                 att_harvest = attendance_db.count_documents({**att_query, "all_time_mode": "harvest"})
-                att_non = attendance_db.count_documents({**att_query, "all_time_mode": {"$ne": "harvest"}}) # $ne means 'not equal'
+                att_non = attendance_db.count_documents({**att_query, "all_time_mode": {"$ne": "harvest"}})
                 
                 wage_h = float(config.get("all_time_wage_harvest", 0))
                 rice_h = float(config.get("all_time_rice_harvest", 0))
@@ -98,8 +94,12 @@ def handle_labours():
                 "id": lab_id,
                 "name": lab["name"],
                 "type": lab["type"], 
-                "current_status": current_status, # NEW: Sent to UI for button color
+                "current_status": current_status,
+                "current_mode": current_mode,     # NEW: Sends the saved mode to UI
+                "current_season": current_season, # NEW: Sends the saved season to UI
                 "days_worked": total_days,
+                "harvest_days": att_harvest,      # NEW: Breakdown for UI
+                "non_harvest_days": att_non,      # NEW: Breakdown for UI
                 "amount_earned": amount_earned,
                 "amount_taken": amount_taken,
                 "amount_due": amount_earned - amount_taken, 
@@ -129,7 +129,7 @@ def mark_attendance():
         "date": data['date'], 
         "status": data['status'], 
         "season": data.get('season', 'none'),
-        "all_time_mode": data.get('all_time_mode', 'non_harvest') # NEW: Tracks if this day was a harvest day
+        "all_time_mode": data.get('all_time_mode', 'non_harvest')
     }
     attendance_db.update_one(
         {"labour_id": data['labour_id'], "date": data['date']},
