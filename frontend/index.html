@@ -14,22 +14,22 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans pb-20">
 
-    <div class="bg-gradient-to-r from-green-700 to-green-900 text-white p-5 shadow-lg flex justify-between items-center rounded-b-2xl mb-4">
+    <div class="bg-gradient-to-r from-green-800 to-green-900 text-white p-5 shadow-xl flex justify-between items-center rounded-b-2xl mb-4">
         <h1 class="text-2xl font-extrabold tracking-wide">🌾 FarmManager</h1>
         <button onclick="installPWA()" id="installBtn" class="hidden bg-white text-green-800 px-4 py-1 rounded-full font-bold shadow-md text-sm transition hover:bg-gray-100">Install App</button>
     </div>
 
     <div class="max-w-3xl mx-auto px-4">
         
-        <div class="flex space-x-2 bg-white p-2 rounded-xl shadow-sm mb-4 overflow-x-auto">
+        <div class="flex space-x-2 bg-white p-2 rounded-xl shadow-md mb-5 overflow-x-auto">
             <button onclick="switchTab('tab-admin')" id="btn-admin" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm bg-green-100 text-green-800 transition">⚙️ Admin</button>
             <button onclick="switchTab('tab-alltime')" id="btn-alltime" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm text-gray-500 hover:bg-gray-100 transition">👷‍♂️ All-Time</button>
             <button onclick="switchTab('tab-occasional')" id="btn-occasional" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm text-gray-500 hover:bg-gray-100 transition">🌾 Occasional</button>
         </div>
 
         <div id="searchFilters" class="hidden flex gap-2 mb-4">
-            <input type="text" id="searchWorker" onkeyup="renderLabours()" placeholder="🔍 Search by worker name..." class="border border-gray-300 p-3 rounded-xl w-full shadow-sm focus:ring-2 focus:ring-green-500 outline-none">
-            <select id="filterYear" onchange="loadData()" class="border border-gray-300 p-3 rounded-xl shadow-sm bg-white font-bold text-green-700 focus:ring-2 focus:ring-green-500 outline-none">
+            <input type="text" id="searchWorker" onkeyup="renderLabours()" placeholder="🔍 Search worker name..." class="border-2 border-gray-200 p-3 rounded-xl w-full shadow-sm focus:border-green-500 outline-none text-lg">
+            <select id="filterYear" onchange="loadData()" class="border-2 border-gray-200 p-3 rounded-xl shadow-sm bg-white font-bold text-green-700 focus:border-green-500 outline-none">
                 <option value="all">All Years</option>
                 <option value="2026">2026</option>
                 <option value="2025">2025</option>
@@ -37,15 +37,22 @@
             </select>
         </div>
 
-        <div id="globalFilters" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-xl shadow-sm mb-6">
-            <div class="grid grid-cols-2 gap-4">
+        <div id="globalFilters" class="hidden bg-white border-2 border-yellow-300 p-4 rounded-2xl shadow-lg mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                    <label class="block text-xs font-bold text-yellow-800 mb-1">📅 Action Date</label>
-                    <input type="date" id="attendanceDate" class="border border-yellow-300 p-2 rounded-lg w-full bg-white shadow-sm">
+                    <label class="block text-sm font-extrabold text-gray-700 mb-1">📅 Action Date</label>
+                    <input type="date" id="attendanceDate" onchange="loadData()" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-yellow-800 mb-1">🌤️ Season (Occasional)</label>
-                    <select id="attendanceSeason" class="border border-yellow-300 p-2 rounded-lg w-full bg-white shadow-sm">
+                    <label class="block text-sm font-extrabold text-blue-800 mb-1">👷‍♂️ All-Time Mode</label>
+                    <select id="allTimeMode" class="border-2 border-blue-200 p-2 rounded-lg w-full bg-blue-50 font-bold text-blue-900">
+                        <option value="non_harvest">Non-Harvest Day</option>
+                        <option value="harvest">Harvest Day</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-extrabold text-orange-800 mb-1">🌾 Occasional Season</label>
+                    <select id="attendanceSeason" class="border-2 border-orange-200 p-2 rounded-lg w-full bg-orange-50 font-bold text-orange-900">
                         <option value="none">None</option>
                         <option value="boro_chas">Boro Chas</option>
                         <option value="boro_harvest">Boro Harvest</option>
@@ -57,62 +64,63 @@
         </div>
 
         <div id="tab-admin" class="tab-content active">
-            <div class="bg-white p-5 rounded-xl shadow-md mb-6 border-t-4 border-blue-500">
-                <h2 class="font-bold text-lg mb-3 text-gray-700">➕ Add New Worker</h2>
+            
+            <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border-t-8 border-gray-800">
+                <h2 class="font-bold text-xl mb-3 text-gray-800">➕ Add New Worker</h2>
                 <div class="flex flex-col gap-3">
-                    <input type="text" id="newLabourName" placeholder="Worker Full Name" class="border p-3 rounded-lg w-full bg-gray-50">
+                    <input type="text" id="newLabourName" placeholder="Worker Full Name" class="border-2 border-gray-200 p-3 rounded-lg w-full text-lg focus:border-gray-800 outline-none">
                     <div class="flex gap-2">
-                        <select id="newLabourType" class="border p-3 rounded-lg flex-1 bg-gray-50">
+                        <select id="newLabourType" class="border-2 border-gray-200 p-3 rounded-lg flex-1 text-lg font-bold text-gray-700">
                             <option value="all_time">All-Time Worker</option>
                             <option value="occasional">Occasional Worker</option>
                         </select>
-                        <button onclick="addLabour()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold shadow-md transition">Add</button>
+                        <button onclick="addLabour()" class="bg-gray-800 hover:bg-gray-900 text-white px-8 py-3 rounded-lg font-bold shadow-md transition text-lg">Add</button>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-md mb-6 border-t-4 border-green-500">
-                <h2 class="font-bold text-lg mb-4 text-gray-700">⚙️ Set Daily Rates</h2>
-                <div class="grid grid-cols-1 gap-4 mb-4">
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <h3 class="font-bold text-blue-800 mb-3">👷‍♂️ All-Time Rates</h3>
-                        <div class="flex gap-4">
-                            <div class="flex-1">
-                                <label class="block text-xs font-bold text-blue-600 uppercase">Wage (₹)</label>
-                                <input type="number" id="allTimeWage" class="border p-2 rounded w-full mt-1">
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-xs font-bold text-blue-600 uppercase">Rice (Kg)</label>
-                                <input type="number" id="allTimeRice" class="border p-2 rounded w-full mt-1">
-                            </div>
-                        </div>
+            <h2 class="font-extrabold text-2xl mb-4 text-gray-800 ml-1">⚙️ Set Daily Rates</h2>
+
+            <div class="bg-blue-50 p-5 rounded-2xl shadow-md mb-5 border-2 border-blue-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-extrabold text-xl text-blue-900">👷‍♂️ All-Time Rates</h3>
+                    <select id="configAllTimeMode" onchange="swapAllTimeConfigInputs()" class="border-2 border-blue-300 p-2 rounded-lg bg-white font-bold text-blue-700 outline-none">
+                        <option value="non_harvest">Non-Harvest</option>
+                        <option value="harvest">Harvest</option>
+                    </select>
+                </div>
+                <div class="flex gap-4 mb-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-extrabold text-blue-700 uppercase">Wage (₹)</label>
+                        <input type="number" id="configAllTimeWage" class="border-2 border-blue-200 p-3 rounded-lg w-full mt-1 text-xl font-bold">
                     </div>
-                    
-                    <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                        <h3 class="font-bold text-orange-800 mb-3">🌾 Occasional Rates</h3>
-                        <div class="flex gap-4">
-                            <div class="flex-1">
-                                <label class="block text-xs font-bold text-orange-600 uppercase">Wage (₹)</label>
-                                <input type="number" id="occasionalWage" class="border p-2 rounded w-full mt-1">
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-xs font-bold text-orange-600 uppercase">Rice (Kg)</label>
-                                <input type="number" id="occasionalRice" class="border p-2 rounded w-full mt-1">
-                            </div>
-                        </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-extrabold text-blue-700 uppercase">Rice (Kg)</label>
+                        <input type="number" id="configAllTimeRice" class="border-2 border-blue-200 p-3 rounded-lg w-full mt-1 text-xl font-bold">
                     </div>
                 </div>
-                <button onclick="saveConfig()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg w-full font-bold shadow-md transition">Save All Rates</button>
+                <button onclick="saveAllTimeRates()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg w-full font-extrabold shadow-md transition text-lg">Save All-Time Rates</button>
+            </div>
+            
+            <div class="bg-orange-50 p-5 rounded-2xl shadow-md mb-6 border-2 border-orange-200">
+                <h3 class="font-extrabold text-xl text-orange-900 mb-4">🌾 Occasional Rates</h3>
+                <div class="flex gap-4 mb-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-extrabold text-orange-700 uppercase">Wage (₹)</label>
+                        <input type="number" id="configOccasionalWage" class="border-2 border-orange-200 p-3 rounded-lg w-full mt-1 text-xl font-bold">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-extrabold text-orange-700 uppercase">Rice (Kg)</label>
+                        <input type="number" id="configOccasionalRice" class="border-2 border-orange-200 p-3 rounded-lg w-full mt-1 text-xl font-bold">
+                    </div>
+                </div>
+                <button onclick="saveOccasionalRates()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-lg w-full font-extrabold shadow-md transition text-lg">Save Occasional Rates</button>
             </div>
         </div>
 
-        <div id="tab-alltime" class="tab-content">
-            <div id="list-alltime"></div>
-        </div>
+        <div id="tab-alltime" class="tab-content"><div id="list-alltime"></div></div>
 
-        <div id="tab-occasional" class="tab-content">
-            <div id="list-occasional"></div>
-        </div>
+        <div id="tab-occasional" class="tab-content"><div id="list-occasional"></div></div>
 
     </div>
 
@@ -122,6 +130,7 @@
         
         document.getElementById('attendanceDate').valueAsDate = new Date();
         let allLabours = [];
+        let globalConfig = {}; // Stores all config rates
 
         // --- 2. TAB LOGIC ---
         function switchTab(tabId) {
@@ -140,11 +149,9 @@
             const filters = document.getElementById('globalFilters');
             const searchUI = document.getElementById('searchFilters');
             if (tabId === 'tab-admin') {
-                filters.classList.add('hidden');
-                searchUI.classList.add('hidden');
+                filters.classList.add('hidden'); searchUI.classList.add('hidden');
             } else {
-                filters.classList.remove('hidden');
-                searchUI.classList.remove('hidden');
+                filters.classList.remove('hidden'); searchUI.classList.remove('hidden');
             }
         }
 
@@ -152,29 +159,38 @@
         async function loadData() {
             try {
                 const confRes = await fetch(`${API_URL}/config`);
-                const conf = await confRes.json();
-                document.getElementById('allTimeWage').value = conf.all_time_wage || 0;
-                document.getElementById('allTimeRice').value = conf.all_time_rice || 0;
-                document.getElementById('occasionalWage').value = conf.occasional_wage || 0;
-                document.getElementById('occasionalRice').value = conf.occasional_rice || 0;
+                globalConfig = await confRes.json();
+                
+                swapAllTimeConfigInputs(); // Load the correct all-time rates into inputs
+                document.getElementById('configOccasionalWage').value = globalConfig.occasional_wage || 0;
+                document.getElementById('configOccasionalRice').value = globalConfig.occasional_rice || 0;
 
-                // NEW: Pass the year filter to the backend
                 const year = document.getElementById('filterYear').value;
-                const labRes = await fetch(`${API_URL}/labours?year=${year}`);
+                const date = document.getElementById('attendanceDate').value;
+                const labRes = await fetch(`${API_URL}/labours?year=${year}&date=${date}`);
                 allLabours = await labRes.json();
                 
                 renderLabours();
-            } catch (err) {
-                console.log("Waiting for connection...");
+            } catch (err) { console.log("Waiting for connection..."); }
+        }
+
+        // Switches the inputs based on the dropdown in the Config section
+        function swapAllTimeConfigInputs() {
+            const mode = document.getElementById('configAllTimeMode').value;
+            if (mode === 'harvest') {
+                document.getElementById('configAllTimeWage').value = globalConfig.all_time_wage_harvest || 0;
+                document.getElementById('configAllTimeRice').value = globalConfig.all_time_rice_harvest || 0;
+            } else {
+                document.getElementById('configAllTimeWage').value = globalConfig.all_time_wage_non_harvest || 0;
+                document.getElementById('configAllTimeRice').value = globalConfig.all_time_rice_non_harvest || 0;
             }
         }
 
-        // --- 4. RENDER UI (With Search Filtering) ---
+        // --- 4. RENDER UI ---
         function renderLabours() {
             const allTimeList = document.getElementById('list-alltime');
             const occasionalList = document.getElementById('list-occasional');
             
-            // NEW: Apply text search filter
             const searchTerm = document.getElementById('searchWorker').value.toLowerCase();
             const filteredLabours = allLabours.filter(l => l.name.toLowerCase().includes(searchTerm));
             
@@ -189,55 +205,79 @@
             const isAllTime = l.type === 'all_time';
             const color = isAllTime ? 'blue' : 'orange';
             
+            // DYNAMIC BUTTON COLORS BASED ON CURRENT STATUS
+            const isPresent = l.current_status === 'present';
+            const isAbsent = l.current_status === 'absent';
+            
+            const btnPresent = isPresent 
+                ? "bg-green-700 text-white shadow-inner scale-95 border-2 border-green-900" 
+                : "bg-white text-green-700 border-2 border-green-300 hover:bg-green-50 shadow-sm";
+                
+            const btnAbsent = isAbsent 
+                ? "bg-red-700 text-white shadow-inner scale-95 border-2 border-red-900" 
+                : "bg-white text-red-700 border-2 border-red-300 hover:bg-red-50 shadow-sm";
+
             return `
-            <div class="bg-white p-5 rounded-2xl shadow-md mb-4 border-l-8 border-${color}-500 relative">
-                <div class="absolute top-4 right-4 flex gap-2">
-                    <button onclick="editLabour('${l.id}', '${l.name}')" class="text-gray-400 hover:text-blue-600 transition">✏️</button>
-                    <button onclick="deleteLabour('${l.id}', '${l.name}')" class="text-gray-400 hover:text-red-600 transition">🗑️</button>
+            <div class="bg-white p-6 rounded-3xl shadow-lg mb-5 border-l-8 border-${color}-500 relative">
+                <div class="absolute top-5 right-5 flex gap-3">
+                    <button onclick="editLabour('${l.id}', '${l.name}')" class="text-gray-400 hover:text-blue-600 transition text-lg">✏️</button>
+                    <button onclick="deleteLabour('${l.id}', '${l.name}')" class="text-gray-400 hover:text-red-600 transition text-lg">🗑️</button>
                 </div>
 
-                <div class="mb-4">
-                    <h3 class="font-extrabold text-xl text-gray-800 pr-16">${l.name}</h3>
-                    <span class="inline-block mt-1 text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full font-bold shadow-sm">🗓️ ${l.days_worked} Days Present</span>
+                <div class="mb-5">
+                    <h3 class="font-extrabold text-2xl text-gray-800 pr-16 tracking-tight">${l.name}</h3>
+                    <span class="inline-block mt-2 text-sm bg-gray-200 text-gray-700 px-3 py-1 rounded-full font-bold shadow-sm border border-gray-300">🗓️ ${l.days_worked} Days Present</span>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-3 text-sm bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100">
+                <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-2xl mb-5 border border-gray-200 shadow-inner">
                     <div>
-                        <p class="text-gray-500 text-xs uppercase font-bold">CASH DUE</p>
-                        <p class="font-extrabold text-lg text-blue-600">₹${l.amount_due}</p>
-                        <p class="text-xs text-gray-400 mt-1">Earned: ₹${l.amount_earned} | Taken: ₹${l.amount_taken}</p>
+                        <p class="text-gray-500 text-sm uppercase font-extrabold tracking-wider">CASH DUE</p>
+                        <p class="font-black text-2xl text-blue-700 mt-1">₹${l.amount_due}</p>
+                        <p class="text-sm font-bold text-gray-600 mt-2">Earned: ₹${l.amount_earned}</p>
+                        <p class="text-sm font-semibold text-red-500">Taken: ₹${l.amount_taken}</p>
                     </div>
                     <div>
-                        <p class="text-gray-500 text-xs uppercase font-bold">RICE DUE</p>
-                        <p class="font-extrabold text-lg text-orange-600">${l.rice_due} kg</p>
-                        <p class="text-xs text-gray-400 mt-1">Earned: ${l.rice_earned}kg | Taken: ${l.rice_taken}kg</p>
+                        <p class="text-gray-500 text-sm uppercase font-extrabold tracking-wider">RICE DUE</p>
+                        <p class="font-black text-2xl text-orange-700 mt-1">${l.rice_due} kg</p>
+                        <p class="text-sm font-bold text-gray-600 mt-2">Earned: ${l.rice_earned}kg</p>
+                        <p class="text-sm font-semibold text-red-500">Taken: ${l.rice_taken}kg</p>
                     </div>
                 </div>
 
-                <div class="flex gap-2 mb-3">
-                    <button onclick="markAttendance('${l.id}', 'present')" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm font-bold shadow transition">✔️ Mark Present</button>
-                    <button onclick="markAttendance('${l.id}', 'absent')" class="flex-1 bg-red-400 hover:bg-red-500 text-white py-2 rounded-lg text-sm font-bold shadow transition">❌ Mark Absent</button>
+                <div class="flex gap-3 mb-4">
+                    <button onclick="markAttendance('${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">✔️ Present</button>
+                    <button onclick="markAttendance('${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">❌ Absent</button>
                 </div>
                 
-                <div class="flex gap-2">
-                    <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 border-2 border-blue-200 text-blue-700 py-2 rounded-lg text-sm font-bold hover:bg-blue-50 transition">💸 Give Advance</button>
-                    <button onclick="addTransaction('${l.id}', 'rice')" class="flex-1 border-2 border-orange-200 text-orange-700 py-2 rounded-lg text-sm font-bold hover:bg-orange-50 transition">🍚 Give Rice</button>
+                <div class="flex gap-3">
+                    <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 bg-blue-100 text-blue-800 py-3 rounded-xl text-sm font-extrabold hover:bg-blue-200 transition shadow-sm">💸 Give Advance</button>
+                    <button onclick="addTransaction('${l.id}', 'rice')" class="flex-1 bg-orange-100 text-orange-800 py-3 rounded-xl text-sm font-extrabold hover:bg-orange-200 transition shadow-sm">🍚 Give Rice</button>
                 </div>
             </div>`;
         }
 
         // --- 5. DATA ACTIONS ---
-        async function saveConfig() {
+        async function saveAllTimeRates() {
+            const mode = document.getElementById('configAllTimeMode').value;
+            const wage = document.getElementById('configAllTimeWage').value;
+            const rice = document.getElementById('configAllTimeRice').value;
+            
+            const payload = mode === 'harvest' 
+                ? { all_time_wage_harvest: wage, all_time_rice_harvest: rice }
+                : { all_time_wage_non_harvest: wage, all_time_rice_non_harvest: rice };
+
+            await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            alert(`All-Time (${mode}) Rates Saved!`);
+            loadData();
+        }
+
+        async function saveOccasionalRates() {
             const payload = {
-                all_time_wage: document.getElementById('allTimeWage').value,
-                all_time_rice: document.getElementById('allTimeRice').value,
-                occasional_wage: document.getElementById('occasionalWage').value,
-                occasional_rice: document.getElementById('occasionalRice').value
+                occasional_wage: document.getElementById('configOccasionalWage').value,
+                occasional_rice: document.getElementById('configOccasionalRice').value
             };
-            await fetch(`${API_URL}/config`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
-            });
-            alert("All Rates Saved Successfully!");
+            await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            alert("Occasional Rates Saved!");
             loadData();
         }
 
@@ -246,9 +286,7 @@
             const type = document.getElementById('newLabourType').value;
             if(!name) return alert("Please enter a name");
             
-            await fetch(`${API_URL}/labours`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, type})
-            });
+            await fetch(`${API_URL}/labours`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, type}) });
             document.getElementById('newLabourName').value = '';
             loadData();
             switchTab(type === 'all_time' ? 'tab-alltime' : 'tab-occasional');
@@ -257,17 +295,12 @@
         async function editLabour(id, currentName) {
             const newName = prompt("Enter new name for worker:", currentName);
             if (!newName || newName === currentName) return;
-
-            await fetch(`${API_URL}/labours/${id}`, {
-                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: newName})
-            });
+            await fetch(`${API_URL}/labours/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: newName}) });
             loadData();
         }
 
         async function deleteLabour(id, name) {
-            const confirmDelete = confirm(`⚠️ WARNING: Are you sure you want to completely delete ${name}? \n\nThis will erase ALL their attendance and payment history permanently.`);
-            if (!confirmDelete) return;
-
+            if (!confirm(`⚠️ Delete ${name} and ALL their history forever?`)) return;
             await fetch(`${API_URL}/labours/${id}`, { method: 'DELETE' });
             loadData();
         }
@@ -275,27 +308,26 @@
         async function markAttendance(id, status) {
             const date = document.getElementById('attendanceDate').value;
             const season = document.getElementById('attendanceSeason').value;
+            const allTimeMode = document.getElementById('allTimeMode').value;
+            
             await fetch(`${API_URL}/attendance`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({labour_id: id, date, status, season})
+                method: 'POST', headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({labour_id: id, date, status, season, all_time_mode: allTimeMode})
             });
-            loadData();
+            loadData(); // Will instantly refresh the UI so you see the button change colors!
         }
 
         async function addTransaction(id, type) {
             const amount = prompt(`Enter ${type === 'money' ? 'Cash Amount (₹)' : 'Rice Amount (Kg)'} given:`);
             if(!amount || isNaN(amount)) return;
-            await fetch(`${API_URL}/transactions`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({labour_id: id, type, amount})
-            });
+            await fetch(`${API_URL}/transactions`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({labour_id: id, type, amount}) });
             loadData();
         }
 
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('installBtn').classList.remove('hidden');
+            e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').classList.remove('hidden');
         });
         function installPWA() {
             if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; }); }
