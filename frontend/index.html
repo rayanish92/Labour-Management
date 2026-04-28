@@ -44,14 +44,14 @@
                     <input type="date" id="attendanceDate" onchange="loadData()" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold">
                 </div>
                 <div>
-                    <label class="block text-sm font-extrabold text-blue-800 mb-1">👷‍♂️ All-Time Mode</label>
+                    <label class="block text-sm font-extrabold text-blue-800 mb-1">👷‍♂️ Apply All-Time Mode</label>
                     <select id="allTimeMode" class="border-2 border-blue-200 p-2 rounded-lg w-full bg-blue-50 font-bold text-blue-900">
-                        <option value="non_harvest">Non-Harvest Day</option>
+                        <option value="non_harvest">Normal Day</option>
                         <option value="harvest">Harvest Day</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-extrabold text-orange-800 mb-1">🌾 Occasional Season</label>
+                    <label class="block text-sm font-extrabold text-orange-800 mb-1">🌾 Apply Occasional Season</label>
                     <select id="attendanceSeason" class="border-2 border-orange-200 p-2 rounded-lg w-full bg-orange-50 font-bold text-orange-900">
                         <option value="none">None</option>
                         <option value="boro_chas">Boro Chas</option>
@@ -61,10 +61,10 @@
                     </select>
                 </div>
             </div>
+            <p class="text-xs text-gray-500 mt-2 text-center font-bold">⚠️ Dropdowns above apply to NEW attendance marks. Button colors below show what is ALREADY saved for this date.</p>
         </div>
 
         <div id="tab-admin" class="tab-content active">
-            
             <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border-t-8 border-gray-800">
                 <h2 class="font-bold text-xl mb-3 text-gray-800">➕ Add New Worker</h2>
                 <div class="flex flex-col gap-3">
@@ -85,8 +85,8 @@
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-extrabold text-xl text-blue-900">👷‍♂️ All-Time Rates</h3>
                     <select id="configAllTimeMode" onchange="swapAllTimeConfigInputs()" class="border-2 border-blue-300 p-2 rounded-lg bg-white font-bold text-blue-700 outline-none">
-                        <option value="non_harvest">Non-Harvest</option>
-                        <option value="harvest">Harvest</option>
+                        <option value="non_harvest">Normal Day</option>
+                        <option value="harvest">Harvest Day</option>
                     </select>
                 </div>
                 <div class="flex gap-4 mb-4">
@@ -119,27 +119,21 @@
         </div>
 
         <div id="tab-alltime" class="tab-content"><div id="list-alltime"></div></div>
-
         <div id="tab-occasional" class="tab-content"><div id="list-occasional"></div></div>
-
     </div>
 
     <script>
-        // --- 1. SETUP & CONFIG ---
         const API_URL = "https://labour-management-gopa.onrender.com/api"; 
         
         document.getElementById('attendanceDate').valueAsDate = new Date();
         let allLabours = [];
-        let globalConfig = {}; // Stores all config rates
+        let globalConfig = {}; 
 
-        // --- 2. TAB LOGIC ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('[id^="btn-"]').forEach(b => {
-                b.classList.remove('bg-green-100', 'text-green-800');
-                b.classList.add('text-gray-500');
+                b.classList.remove('bg-green-100', 'text-green-800'); b.classList.add('text-gray-500');
             });
-            
             document.getElementById(tabId).classList.add('active');
             
             const btnId = tabId.replace('tab-', 'btn-');
@@ -148,20 +142,15 @@
 
             const filters = document.getElementById('globalFilters');
             const searchUI = document.getElementById('searchFilters');
-            if (tabId === 'tab-admin') {
-                filters.classList.add('hidden'); searchUI.classList.add('hidden');
-            } else {
-                filters.classList.remove('hidden'); searchUI.classList.remove('hidden');
-            }
+            if (tabId === 'tab-admin') { filters.classList.add('hidden'); searchUI.classList.add('hidden'); } 
+            else { filters.classList.remove('hidden'); searchUI.classList.remove('hidden'); }
         }
 
-        // --- 3. FETCH DATA ---
         async function loadData() {
             try {
                 const confRes = await fetch(`${API_URL}/config`);
                 globalConfig = await confRes.json();
-                
-                swapAllTimeConfigInputs(); // Load the correct all-time rates into inputs
+                swapAllTimeConfigInputs();
                 document.getElementById('configOccasionalWage').value = globalConfig.occasional_wage || 0;
                 document.getElementById('configOccasionalRice').value = globalConfig.occasional_rice || 0;
 
@@ -169,12 +158,10 @@
                 const date = document.getElementById('attendanceDate').value;
                 const labRes = await fetch(`${API_URL}/labours?year=${year}&date=${date}`);
                 allLabours = await labRes.json();
-                
                 renderLabours();
             } catch (err) { console.log("Waiting for connection..."); }
         }
 
-        // Switches the inputs based on the dropdown in the Config section
         function swapAllTimeConfigInputs() {
             const mode = document.getElementById('configAllTimeMode').value;
             if (mode === 'harvest') {
@@ -186,29 +173,39 @@
             }
         }
 
-        // --- 4. RENDER UI ---
         function renderLabours() {
-            const allTimeList = document.getElementById('list-alltime');
-            const occasionalList = document.getElementById('list-occasional');
-            
             const searchTerm = document.getElementById('searchWorker').value.toLowerCase();
             const filteredLabours = allLabours.filter(l => l.name.toLowerCase().includes(searchTerm));
             
             const allTime = filteredLabours.filter(l => l.type === 'all_time');
             const occasional = filteredLabours.filter(l => l.type === 'occasional');
 
-            allTimeList.innerHTML = allTime.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
-            occasionalList.innerHTML = occasional.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
+            document.getElementById('list-alltime').innerHTML = allTime.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
+            document.getElementById('list-occasional').innerHTML = occasional.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
         }
 
         function createLabourCard(l) {
             const isAllTime = l.type === 'all_time';
             const color = isAllTime ? 'blue' : 'orange';
             
-            // DYNAMIC BUTTON COLORS BASED ON CURRENT STATUS
+            // DYNAMIC TEXT FOR BREAKDOWN
+            let daysText = `🗓️ ${l.days_worked} Days Present`;
+            if (isAllTime) {
+                daysText = `🗓️ ${l.days_worked} Days (🌾 ${l.harvest_days} Harvest | 🚜 ${l.non_harvest_days} Normal)`;
+            }
+
+            // DYNAMIC BUTTON TEXT FOR HISTORICAL DATA
             const isPresent = l.current_status === 'present';
             const isAbsent = l.current_status === 'absent';
             
+            let presentBtnLabel = "✔️ Mark Present";
+            if (isPresent) {
+                if (isAllTime && l.current_mode === 'harvest') presentBtnLabel = "✔️ Present (Harvest)";
+                else if (isAllTime && l.current_mode === 'non_harvest') presentBtnLabel = "✔️ Present (Normal)";
+                else if (!isAllTime && l.current_season !== 'none') presentBtnLabel = `✔️ Present (${l.current_season.replace('_', ' ')})`;
+                else presentBtnLabel = "✔️ Present";
+            }
+
             const btnPresent = isPresent 
                 ? "bg-green-700 text-white shadow-inner scale-95 border-2 border-green-900" 
                 : "bg-white text-green-700 border-2 border-green-300 hover:bg-green-50 shadow-sm";
@@ -226,7 +223,7 @@
 
                 <div class="mb-5">
                     <h3 class="font-extrabold text-2xl text-gray-800 pr-16 tracking-tight">${l.name}</h3>
-                    <span class="inline-block mt-2 text-sm bg-gray-200 text-gray-700 px-3 py-1 rounded-full font-bold shadow-sm border border-gray-300">🗓️ ${l.days_worked} Days Present</span>
+                    <span class="inline-block mt-2 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold shadow-sm border border-gray-300">${daysText}</span>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-2xl mb-5 border border-gray-200 shadow-inner">
@@ -245,7 +242,7 @@
                 </div>
 
                 <div class="flex gap-3 mb-4">
-                    <button onclick="markAttendance('${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">✔️ Present</button>
+                    <button onclick="markAttendance('${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">${presentBtnLabel}</button>
                     <button onclick="markAttendance('${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">❌ Absent</button>
                 </div>
                 
@@ -256,65 +253,50 @@
             </div>`;
         }
 
-        // --- 5. DATA ACTIONS ---
         async function saveAllTimeRates() {
             const mode = document.getElementById('configAllTimeMode').value;
             const wage = document.getElementById('configAllTimeWage').value;
             const rice = document.getElementById('configAllTimeRice').value;
-            
             const payload = mode === 'harvest' 
                 ? { all_time_wage_harvest: wage, all_time_rice_harvest: rice }
                 : { all_time_wage_non_harvest: wage, all_time_rice_non_harvest: rice };
-
             await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            alert(`All-Time (${mode}) Rates Saved!`);
-            loadData();
+            alert(`All-Time (${mode}) Rates Saved!`); loadData();
         }
 
         async function saveOccasionalRates() {
-            const payload = {
-                occasional_wage: document.getElementById('configOccasionalWage').value,
-                occasional_rice: document.getElementById('configOccasionalRice').value
-            };
+            const payload = { occasional_wage: document.getElementById('configOccasionalWage').value, occasional_rice: document.getElementById('configOccasionalRice').value };
             await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            alert("Occasional Rates Saved!");
-            loadData();
+            alert("Occasional Rates Saved!"); loadData();
         }
 
         async function addLabour() {
-            const name = document.getElementById('newLabourName').value;
-            const type = document.getElementById('newLabourType').value;
+            const name = document.getElementById('newLabourName').value; const type = document.getElementById('newLabourType').value;
             if(!name) return alert("Please enter a name");
-            
             await fetch(`${API_URL}/labours`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, type}) });
-            document.getElementById('newLabourName').value = '';
-            loadData();
-            switchTab(type === 'all_time' ? 'tab-alltime' : 'tab-occasional');
+            document.getElementById('newLabourName').value = ''; loadData(); switchTab(type === 'all_time' ? 'tab-alltime' : 'tab-occasional');
         }
 
         async function editLabour(id, currentName) {
             const newName = prompt("Enter new name for worker:", currentName);
             if (!newName || newName === currentName) return;
-            await fetch(`${API_URL}/labours/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: newName}) });
-            loadData();
+            await fetch(`${API_URL}/labours/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: newName}) }); loadData();
         }
 
         async function deleteLabour(id, name) {
             if (!confirm(`⚠️ Delete ${name} and ALL their history forever?`)) return;
-            await fetch(`${API_URL}/labours/${id}`, { method: 'DELETE' });
-            loadData();
+            await fetch(`${API_URL}/labours/${id}`, { method: 'DELETE' }); loadData();
         }
 
         async function markAttendance(id, status) {
             const date = document.getElementById('attendanceDate').value;
             const season = document.getElementById('attendanceSeason').value;
             const allTimeMode = document.getElementById('allTimeMode').value;
-            
             await fetch(`${API_URL}/attendance`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify({labour_id: id, date, status, season, all_time_mode: allTimeMode})
             });
-            loadData(); // Will instantly refresh the UI so you see the button change colors!
+            loadData(); 
         }
 
         async function addTransaction(id, type) {
@@ -325,13 +307,8 @@
         }
 
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').classList.remove('hidden');
-        });
-        function installPWA() {
-            if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; }); }
-        }
+        let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').classList.remove('hidden'); });
+        function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; }); } }
 
         loadData();
     </script>
