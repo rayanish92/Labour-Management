@@ -37,12 +37,31 @@
             </select>
         </div>
 
+        <!-- Global Filters with Dual Calendars -->
         <div id="globalFilters" class="hidden bg-white border-2 border-yellow-300 p-4 rounded-2xl shadow-lg mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <!-- English Calendar -->
                 <div>
-                    <label class="block text-sm font-extrabold text-gray-700 mb-1">📅 Action Date</label>
-                    <input type="date" id="attendanceDate" onchange="loadData()" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold">
+                    <label class="block text-sm font-extrabold text-gray-700 mb-1">📅 English Date</label>
+                    <input type="date" id="attendanceDate" onchange="syncFromEnglish(); loadData();" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold">
                 </div>
+                <!-- Bengali Calendar -->
+                <div>
+                    <label class="block text-sm font-extrabold text-red-800 mb-1">🗓️ Bengali Date</label>
+                    <div class="flex gap-1">
+                        <select id="bengaliDay" onchange="syncFromBengali(); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/3"></select>
+                        <select id="bengaliMonth" onchange="syncFromBengali(); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-2/3">
+                            <option value="1">Baishakh</option><option value="2">Jyeshtha</option>
+                            <option value="3">Ashadh</option><option value="4">Shraban</option>
+                            <option value="5">Bhadra</option><option value="6">Ashwin</option>
+                            <option value="7">Kartik</option><option value="8">Agrahayan</option>
+                            <option value="9">Poush</option><option value="10">Magh</option>
+                            <option value="11">Falgun</option><option value="12">Chaitra</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-extrabold text-blue-800 mb-1">👷‍♂️ Apply All-Time Mode</label>
                     <select id="allTimeMode" class="border-2 border-blue-200 p-2 rounded-lg w-full bg-blue-50 font-bold text-blue-900">
@@ -61,10 +80,12 @@
                     </select>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mt-2 text-center font-bold">⚠️ Dropdowns above apply to NEW attendance marks. Button colors below show what is ALREADY saved for this date.</p>
+            <p class="text-xs text-gray-500 mt-2 text-center font-bold">⚠️ Dropdowns above apply to NEW attendance marks. Button colors below show what is ALREADY saved.</p>
         </div>
 
+        <!-- TAB 1: ADMIN -->
         <div id="tab-admin" class="tab-content active">
+            <!-- Add Labour Section -->
             <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border-t-8 border-gray-800">
                 <h2 class="font-bold text-xl mb-3 text-gray-800">➕ Add New Worker</h2>
                 <div class="flex flex-col gap-3">
@@ -81,6 +102,7 @@
 
             <h2 class="font-extrabold text-2xl mb-4 text-gray-800 ml-1">⚙️ Set Daily Rates</h2>
 
+            <!-- ALL TIME CONFIG -->
             <div class="bg-blue-50 p-5 rounded-2xl shadow-md mb-5 border-2 border-blue-200">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-extrabold text-xl text-blue-900">👷‍♂️ All-Time Rates</h3>
@@ -102,6 +124,7 @@
                 <button onclick="saveAllTimeRates()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg w-full font-extrabold shadow-md transition text-lg">Save All-Time Rates</button>
             </div>
             
+            <!-- OCCASIONAL CONFIG -->
             <div class="bg-orange-50 p-5 rounded-2xl shadow-md mb-6 border-2 border-orange-200">
                 <h3 class="font-extrabold text-xl text-orange-900 mb-4">🌾 Occasional Rates</h3>
                 <div class="flex gap-4 mb-4">
@@ -124,10 +147,46 @@
 
     <script>
         const API_URL = "https://labour-management-gopa.onrender.com/api"; 
-        
-        document.getElementById('attendanceDate').valueAsDate = new Date();
         let allLabours = [];
         let globalConfig = {}; 
+
+        // --- CALENDAR LOGIC (Simplified Approximation for UI Syncing) ---
+        function initCalendars() {
+            const daySelect = document.getElementById('bengaliDay');
+            for(let i=1; i<=31; i++) {
+                daySelect.innerHTML += `<option value="${i}">${i}</option>`;
+            }
+            document.getElementById('attendanceDate').valueAsDate = new Date();
+            syncFromEnglish();
+        }
+
+        function syncFromEnglish() {
+            const engDate = new Date(document.getElementById('attendanceDate').value);
+            // Simple approximation: Subtract 593 years, offset days by ~14 days (April 14 = Baishakh 1)
+            let bMonth = engDate.getMonth() - 3; 
+            if (bMonth < 0) bMonth += 12;
+            let bDay = engDate.getDate() - 13;
+            if (bDay <= 0) { bMonth = (bMonth - 1 + 12) % 12; bDay += 30; } // Roughly 30 days per month
+            
+            document.getElementById('bengaliMonth').value = bMonth + 1;
+            document.getElementById('bengaliDay').value = bDay;
+        }
+
+        function syncFromBengali() {
+            const bMonth = parseInt(document.getElementById('bengaliMonth').value) - 1;
+            const bDay = parseInt(document.getElementById('bengaliDay').value);
+            // Approximation back to English
+            const today = new Date();
+            let eMonth = (bMonth + 3) % 12;
+            let eYear = today.getFullYear();
+            if (bMonth >= 9) eYear += 1; // Poush/Magh cross the year line
+            let eDay = bDay + 13;
+            if (eDay > 30) { eMonth = (eMonth + 1) % 12; eDay -= 30; }
+            
+            const eDate = new Date(eYear, eMonth, eDay);
+            document.getElementById('attendanceDate').valueAsDate = eDate;
+        }
+        // ----------------------------------------------------------------
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -135,7 +194,6 @@
                 b.classList.remove('bg-green-100', 'text-green-800'); b.classList.add('text-gray-500');
             });
             document.getElementById(tabId).classList.add('active');
-            
             const btnId = tabId.replace('tab-', 'btn-');
             document.getElementById(btnId).classList.remove('text-gray-500');
             document.getElementById(btnId).classList.add('bg-green-100', 'text-green-800');
@@ -158,6 +216,14 @@
                 const date = document.getElementById('attendanceDate').value;
                 const labRes = await fetch(`${API_URL}/labours?year=${year}&date=${date}`);
                 allLabours = await labRes.json();
+                
+                // DYNAMIC MODE DROPDOWN UPDATE
+                // Check if any all-time worker has a saved mode for this date, and update the dropdown to match it
+                const allTimeWorker = allLabours.find(l => l.type === 'all_time' && l.current_mode !== 'none');
+                if(allTimeWorker) {
+                    document.getElementById('allTimeMode').value = allTimeWorker.current_mode;
+                }
+
                 renderLabours();
             } catch (err) { console.log("Waiting for connection..."); }
         }
@@ -188,13 +254,9 @@
             const isAllTime = l.type === 'all_time';
             const color = isAllTime ? 'blue' : 'orange';
             
-            // DYNAMIC TEXT FOR BREAKDOWN
             let daysText = `🗓️ ${l.days_worked} Days Present`;
-            if (isAllTime) {
-                daysText = `🗓️ ${l.days_worked} Days (🌾 ${l.harvest_days} Harvest | 🚜 ${l.non_harvest_days} Normal)`;
-            }
+            if (isAllTime) { daysText = `🗓️ ${l.days_worked} Days (🌾 ${l.harvest_days} Harvest | 🚜 ${l.non_harvest_days} Normal)`; }
 
-            // DYNAMIC BUTTON TEXT FOR HISTORICAL DATA
             const isPresent = l.current_status === 'present';
             const isAbsent = l.current_status === 'absent';
             
@@ -206,13 +268,8 @@
                 else presentBtnLabel = "✔️ Present";
             }
 
-            const btnPresent = isPresent 
-                ? "bg-green-700 text-white shadow-inner scale-95 border-2 border-green-900" 
-                : "bg-white text-green-700 border-2 border-green-300 hover:bg-green-50 shadow-sm";
-                
-            const btnAbsent = isAbsent 
-                ? "bg-red-700 text-white shadow-inner scale-95 border-2 border-red-900" 
-                : "bg-white text-red-700 border-2 border-red-300 hover:bg-red-50 shadow-sm";
+            const btnPresent = isPresent ? "bg-green-700 text-white shadow-inner scale-95 border-2 border-green-900" : "bg-white text-green-700 border-2 border-green-300 hover:bg-green-50 shadow-sm";
+            const btnAbsent = isAbsent ? "bg-red-700 text-white shadow-inner scale-95 border-2 border-red-900" : "bg-white text-red-700 border-2 border-red-300 hover:bg-red-50 shadow-sm";
 
             return `
             <div class="bg-white p-6 rounded-3xl shadow-lg mb-5 border-l-8 border-${color}-500 relative">
@@ -220,12 +277,10 @@
                     <button onclick="editLabour('${l.id}', '${l.name}')" class="text-gray-400 hover:text-blue-600 transition text-lg">✏️</button>
                     <button onclick="deleteLabour('${l.id}', '${l.name}')" class="text-gray-400 hover:text-red-600 transition text-lg">🗑️</button>
                 </div>
-
                 <div class="mb-5">
                     <h3 class="font-extrabold text-2xl text-gray-800 pr-16 tracking-tight">${l.name}</h3>
                     <span class="inline-block mt-2 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold shadow-sm border border-gray-300">${daysText}</span>
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-2xl mb-5 border border-gray-200 shadow-inner">
                     <div>
                         <p class="text-gray-500 text-sm uppercase font-extrabold tracking-wider">CASH DUE</p>
@@ -240,12 +295,10 @@
                         <p class="text-sm font-semibold text-red-500">Taken: ${l.rice_taken}kg</p>
                     </div>
                 </div>
-
                 <div class="flex gap-3 mb-4">
                     <button onclick="markAttendance('${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">${presentBtnLabel}</button>
                     <button onclick="markAttendance('${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">❌ Absent</button>
                 </div>
-                
                 <div class="flex gap-3">
                     <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 bg-blue-100 text-blue-800 py-3 rounded-xl text-sm font-extrabold hover:bg-blue-200 transition shadow-sm">💸 Give Advance</button>
                     <button onclick="addTransaction('${l.id}', 'rice')" class="flex-1 bg-orange-100 text-orange-800 py-3 rounded-xl text-sm font-extrabold hover:bg-orange-200 transition shadow-sm">🍚 Give Rice</button>
@@ -255,11 +308,8 @@
 
         async function saveAllTimeRates() {
             const mode = document.getElementById('configAllTimeMode').value;
-            const wage = document.getElementById('configAllTimeWage').value;
-            const rice = document.getElementById('configAllTimeRice').value;
-            const payload = mode === 'harvest' 
-                ? { all_time_wage_harvest: wage, all_time_rice_harvest: rice }
-                : { all_time_wage_non_harvest: wage, all_time_rice_non_harvest: rice };
+            const wage = document.getElementById('configAllTimeWage').value; const rice = document.getElementById('configAllTimeRice').value;
+            const payload = mode === 'harvest' ? { all_time_wage_harvest: wage, all_time_rice_harvest: rice } : { all_time_wage_non_harvest: wage, all_time_rice_non_harvest: rice };
             await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
             alert(`All-Time (${mode}) Rates Saved!`); loadData();
         }
@@ -310,6 +360,7 @@
         let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').classList.remove('hidden'); });
         function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; }); } }
 
+        initCalendars(); // Start dual calendar sync
         loadData();
     </script>
 </body>
