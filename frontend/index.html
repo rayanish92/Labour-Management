@@ -10,6 +10,8 @@
         .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        /* Instant click feedback */
+        .processing { opacity: 0.5; pointer-events: none; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans pb-20">
@@ -29,8 +31,6 @@
 
         <div id="searchFilters" class="hidden flex gap-2 mb-4">
             <input type="text" id="searchWorker" onkeyup="renderLabours()" placeholder="🔍 Search worker name..." class="border-2 border-gray-200 p-3 rounded-xl w-full shadow-sm focus:border-green-500 outline-none text-lg">
-            
-            <!-- UPDATED: List Filter now shows Bengali Years too -->
             <select id="filterYear" onchange="loadData()" class="border-2 border-gray-200 p-3 rounded-xl shadow-sm bg-white font-bold text-green-700 focus:border-green-500 outline-none">
                 <option value="all">All Years</option>
                 <option value="2027">2027 (1433-34)</option>
@@ -43,12 +43,10 @@
         <!-- Global Filters with Fully Synced Dual Calendars -->
         <div id="globalFilters" class="hidden bg-white border-2 border-yellow-300 p-4 rounded-2xl shadow-lg mb-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <!-- English Calendar -->
                 <div>
                     <label class="block text-sm font-extrabold text-gray-700 mb-1">📅 English Date</label>
                     <input type="date" id="attendanceDate" onchange="syncFromEnglish(); loadData();" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold shadow-inner">
                 </div>
-                <!-- Bengali Calendar -->
                 <div>
                     <label class="block text-sm font-extrabold text-red-800 mb-1">🗓️ Bengali Date (Bangabda)</label>
                     <div class="flex gap-1">
@@ -61,7 +59,6 @@
                             <option value="9">Poush</option><option value="10">Magh</option>
                             <option value="11">Falgun</option><option value="12">Chaitra</option>
                         </select>
-                        <!-- UPDATED: Bengali Year is now a smooth dropdown -->
                         <select id="bengaliYear" onchange="syncFromBengali(); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner"></select>
                     </div>
                 </div>
@@ -85,7 +82,6 @@
                     </select>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mt-2 text-center font-bold">⚠️ Dropdowns above apply to NEW attendance marks. Button colors below show what is ALREADY saved.</p>
         </div>
 
         <!-- TAB 1: ADMIN -->
@@ -105,8 +101,6 @@
             </div>
 
             <h2 class="font-extrabold text-2xl mb-4 text-gray-800 ml-1">⚙️ Set Daily Rates</h2>
-
-            <!-- ALL TIME CONFIG -->
             <div class="bg-blue-50 p-5 rounded-2xl shadow-md mb-5 border-2 border-blue-200">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-extrabold text-xl text-blue-900">👷‍♂️ All-Time Rates</h3>
@@ -128,7 +122,6 @@
                 <button onclick="saveAllTimeRates()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg w-full font-extrabold shadow-md transition text-lg">Save All-Time Rates</button>
             </div>
             
-            <!-- OCCASIONAL CONFIG -->
             <div class="bg-orange-50 p-5 rounded-2xl shadow-md mb-6 border-2 border-orange-200">
                 <h3 class="font-extrabold text-xl text-orange-900 mb-4">🌾 Occasional Rates</h3>
                 <div class="flex gap-4 mb-4">
@@ -154,13 +147,14 @@
         let allLabours = [];
         let globalConfig = {}; 
 
-        // --- CALENDAR LOGIC (Includes Bengali Year Sync) ---
+        // --- ACCURATE CALENDAR MATH ---
+        // Bengali calendar mapping (Fixed offsets for agricultural panjika)
+        const bDaysInMonth = [31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 30, 30]; // Baishakh to Chaitra lengths
+
         function initCalendars() {
-            // Populate Days Dropdown
             const daySelect = document.getElementById('bengaliDay');
             for(let i=1; i<=31; i++) { daySelect.innerHTML += `<option value="${i}">${i}</option>`; }
             
-            // Populate Bengali Year Dropdown automatically
             const bYearSelect = document.getElementById('bengaliYear');
             for(let i=1430; i<=1440; i++) { bYearSelect.innerHTML += `<option value="${i}">${i}</option>`; }
 
@@ -169,37 +163,59 @@
         }
 
         function syncFromEnglish() {
-            const engDate = new Date(document.getElementById('attendanceDate').value);
-            const eYear = engDate.getFullYear();
-            const eMonth = engDate.getMonth(); 
-            const eDay = engDate.getDate();
-
-            let bYear = eYear - 593;
-            if (eMonth < 3 || (eMonth === 3 && eDay < 14)) { bYear = eYear - 594; }
-
-            let bMonth = eMonth - 3; 
-            if (bMonth < 0) bMonth += 12;
-            let bDayTemp = eDay - 13;
-            if (bDayTemp <= 0) { bMonth = (bMonth - 1 + 12) % 12; bDayTemp += 30; }
+            // Converts Gregorian to fixed Bengali format based on April 14 transition
+            const date = new Date(document.getElementById('attendanceDate').value);
+            const startYear = new Date(date.getFullYear(), 3, 14); // April 14
             
+            let bYear = date.getFullYear() - 593;
+            let diffTime = date.getTime() - startYear.getTime();
+            
+            if (diffTime < 0) {
+                bYear -= 1;
+                const prevYearStart = new Date(date.getFullYear() - 1, 3, 14);
+                diffTime = date.getTime() - prevYearStart.getTime();
+            }
+
+            let daysDiff = Math.floor(diffTime / (1000 * 3600 * 24));
+            
+            let bMonth = 0;
+            while (bMonth < 12 && daysDiff >= bDaysInMonth[bMonth]) {
+                daysDiff -= bDaysInMonth[bMonth];
+                bMonth++;
+            }
+            // Leap year fix for Falgun (11th month)
+            if (bMonth === 10 && isLeapYear(date.getFullYear())) bDaysInMonth[10] = 31;
+            else bDaysInMonth[10] = 30;
+
             document.getElementById('bengaliYear').value = bYear;
             document.getElementById('bengaliMonth').value = bMonth + 1;
-            document.getElementById('bengaliDay').value = bDayTemp;
+            document.getElementById('bengaliDay').value = daysDiff + 1;
         }
 
         function syncFromBengali() {
+            // Converts Bengali back to Gregorian exactly
             const bYear = parseInt(document.getElementById('bengaliYear').value);
             const bMonth = parseInt(document.getElementById('bengaliMonth').value) - 1;
-            const bDay = parseInt(document.getElementById('bengaliDay').value);
+            const bDay = parseInt(document.getElementById('bengaliDay').value) - 1;
+
+            const eYear = bYear + 593;
+            const baseDate = new Date(eYear, 3, 14); // April 14th of that Gregorian year
             
-            let eMonth = (bMonth + 3) % 12;
-            let eYear = (bMonth >= 9) ? bYear + 594 : bYear + 593; 
-            let eDay = bDay + 13;
-            if (eDay > 30) { eMonth = (eMonth + 1) % 12; eDay -= 30; }
+            if (isLeapYear(eYear+1)) bDaysInMonth[10] = 31; else bDaysInMonth[10] = 30;
+
+            let daysToAdd = 0;
+            for(let i=0; i<bMonth; i++) { daysToAdd += bDaysInMonth[i]; }
+            daysToAdd += bDay;
+
+            baseDate.setDate(baseDate.getDate() + daysToAdd);
             
-            const eDate = new Date(eYear, eMonth, eDay);
-            document.getElementById('attendanceDate').valueAsDate = eDate;
+            // Format to YYYY-MM-DD for input
+            const offset = baseDate.getTimezoneOffset()
+            const fixedDate = new Date(baseDate.getTime() - (offset*60*1000))
+            document.getElementById('attendanceDate').value = fixedDate.toISOString().split('T')[0];
         }
+
+        function isLeapYear(year) { return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0); }
         // ----------------------------------------------------------------
 
         function switchTab(tabId) {
@@ -282,7 +298,7 @@
             const btnAbsent = isAbsent ? "bg-red-700 text-white shadow-inner scale-95 border-2 border-red-900" : "bg-white text-red-700 border-2 border-red-300 hover:bg-red-50 shadow-sm";
 
             return `
-            <div class="bg-white p-6 rounded-3xl shadow-lg mb-5 border-l-8 border-${color}-500 relative">
+            <div id="card-${l.id}" class="bg-white p-6 rounded-3xl shadow-lg mb-5 border-l-8 border-${color}-500 relative transition-opacity duration-200">
                 <div class="absolute top-5 right-5 flex gap-3">
                     <button onclick="editLabour('${l.id}', '${l.name}')" class="text-gray-400 hover:text-blue-600 transition text-lg">✏️</button>
                     <button onclick="deleteLabour('${l.id}', '${l.name}')" class="text-gray-400 hover:text-red-600 transition text-lg">🗑️</button>
@@ -306,8 +322,8 @@
                     </div>
                 </div>
                 <div class="flex gap-3 mb-4">
-                    <button onclick="markAttendance('${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">${presentBtnLabel}</button>
-                    <button onclick="markAttendance('${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">❌ Absent</button>
+                    <button onclick="markAttendance(this, '${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">${presentBtnLabel}</button>
+                    <button onclick="markAttendance(this, '${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">❌ Absent</button>
                 </div>
                 <div class="flex gap-3">
                     <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 bg-blue-100 text-blue-800 py-3 rounded-xl text-sm font-extrabold hover:bg-blue-200 transition shadow-sm">💸 Give Advance</button>
@@ -348,15 +364,21 @@
             await fetch(`${API_URL}/labours/${id}`, { method: 'DELETE' }); loadData();
         }
 
-        async function markAttendance(id, status) {
+        // UPDATED: Now provides instant visual feedback while it saves instantly in the background!
+        async function markAttendance(btn, id, status) {
+            const card = document.getElementById(`card-${id}`);
+            card.classList.add('processing'); // Grays out card slightly so user knows it clicked
+
             const date = document.getElementById('attendanceDate').value;
             const season = document.getElementById('attendanceSeason').value;
             const allTimeMode = document.getElementById('allTimeMode').value;
+            
             await fetch(`${API_URL}/attendance`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify({labour_id: id, date, status, season, all_time_mode: allTimeMode})
             });
-            loadData(); 
+            await loadData(); // Fetch the newly calculated totals in a fraction of a second
+            card.classList.remove('processing');
         }
 
         async function addTransaction(id, type) {
