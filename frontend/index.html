@@ -29,11 +29,14 @@
 
         <div id="searchFilters" class="hidden flex gap-2 mb-4">
             <input type="text" id="searchWorker" onkeyup="renderLabours()" placeholder="🔍 Search worker name..." class="border-2 border-gray-200 p-3 rounded-xl w-full shadow-sm focus:border-green-500 outline-none text-lg">
+            
+            <!-- UPDATED: List Filter now shows Bengali Years too -->
             <select id="filterYear" onchange="loadData()" class="border-2 border-gray-200 p-3 rounded-xl shadow-sm bg-white font-bold text-green-700 focus:border-green-500 outline-none">
                 <option value="all">All Years</option>
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
+                <option value="2027">2027 (1433-34)</option>
+                <option value="2026">2026 (1432-33)</option>
+                <option value="2025">2025 (1431-32)</option>
+                <option value="2024">2024 (1430-31)</option>
             </select>
         </div>
 
@@ -58,7 +61,8 @@
                             <option value="9">Poush</option><option value="10">Magh</option>
                             <option value="11">Falgun</option><option value="12">Chaitra</option>
                         </select>
-                        <input type="number" id="bengaliYear" onchange="syncFromBengali(); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner" placeholder="Year">
+                        <!-- UPDATED: Bengali Year is now a smooth dropdown -->
+                        <select id="bengaliYear" onchange="syncFromBengali(); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner"></select>
                     </div>
                 </div>
             </div>
@@ -152,8 +156,14 @@
 
         // --- CALENDAR LOGIC (Includes Bengali Year Sync) ---
         function initCalendars() {
+            // Populate Days Dropdown
             const daySelect = document.getElementById('bengaliDay');
             for(let i=1; i<=31; i++) { daySelect.innerHTML += `<option value="${i}">${i}</option>`; }
+            
+            // Populate Bengali Year Dropdown automatically
+            const bYearSelect = document.getElementById('bengaliYear');
+            for(let i=1430; i<=1440; i++) { bYearSelect.innerHTML += `<option value="${i}">${i}</option>`; }
+
             document.getElementById('attendanceDate').valueAsDate = new Date();
             syncFromEnglish();
         }
@@ -161,14 +171,12 @@
         function syncFromEnglish() {
             const engDate = new Date(document.getElementById('attendanceDate').value);
             const eYear = engDate.getFullYear();
-            const eMonth = engDate.getMonth(); // 0 = Jan
+            const eMonth = engDate.getMonth(); 
             const eDay = engDate.getDate();
 
-            // Calculate Bengali Year (Switches exactly at mid-April)
             let bYear = eYear - 593;
             if (eMonth < 3 || (eMonth === 3 && eDay < 14)) { bYear = eYear - 594; }
 
-            // Calculate Bengali Month & Day
             let bMonth = eMonth - 3; 
             if (bMonth < 0) bMonth += 12;
             let bDayTemp = eDay - 13;
@@ -180,13 +188,12 @@
         }
 
         function syncFromBengali() {
-            const bYear = parseInt(document.getElementById('bengaliYear').value) || 1430;
+            const bYear = parseInt(document.getElementById('bengaliYear').value);
             const bMonth = parseInt(document.getElementById('bengaliMonth').value) - 1;
             const bDay = parseInt(document.getElementById('bengaliDay').value);
             
-            // Convert back to English
             let eMonth = (bMonth + 3) % 12;
-            let eYear = (bMonth >= 9) ? bYear + 594 : bYear + 593; // Magh, Falgun, Chaitra cross the English Year
+            let eYear = (bMonth >= 9) ? bYear + 594 : bYear + 593; 
             let eDay = bDay + 13;
             if (eDay > 30) { eMonth = (eMonth + 1) % 12; eDay -= 30; }
             
@@ -224,7 +231,6 @@
                 const labRes = await fetch(`${API_URL}/labours?year=${year}&date=${date}`);
                 allLabours = await labRes.json();
                 
-                // DYNAMIC MODE DROPDOWN UPDATE
                 const allTimeWorker = allLabours.find(l => l.type === 'all_time' && l.current_mode !== 'none');
                 if(allTimeWorker) { document.getElementById('allTimeMode').value = allTimeWorker.current_mode; }
 
