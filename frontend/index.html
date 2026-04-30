@@ -245,14 +245,15 @@
 
         function syncFromEnglish(prefix) {
             const date = new Date(document.getElementById(prefix + 'attendanceDate').value);
-            const startYear = new Date(date.getFullYear(), 3, 14); 
+            // FIX: Anchor Pohela Boishakh strictly to April 15 for Indian Surya Siddhanta accuracy
+            const startYear = new Date(date.getFullYear(), 3, 15); 
             
             let bYear = date.getFullYear() - 593;
             let diffTime = date.getTime() - startYear.getTime();
             
             if (diffTime < 0) {
                 bYear -= 1;
-                const prevYearStart = new Date(date.getFullYear() - 1, 3, 14);
+                const prevYearStart = new Date(date.getFullYear() - 1, 3, 15);
                 diffTime = date.getTime() - prevYearStart.getTime();
             }
 
@@ -273,7 +274,7 @@
             const bDay = parseInt(document.getElementById(prefix + 'bengaliDay').value) - 1;
 
             const eYear = bYear + 593;
-            const baseDate = new Date(eYear, 3, 14); 
+            const baseDate = new Date(eYear, 3, 15); // Anchor to April 15
             
             if (isLeapYear(eYear+1)) bDaysInMonth[10] = 31; else bDaysInMonth[10] = 30;
 
