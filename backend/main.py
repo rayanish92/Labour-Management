@@ -20,8 +20,7 @@ transactions_db = db.transactions
 @app.route('/api/config', methods=['GET', 'POST'])
 def handle_config():
     if request.method == 'POST':
-        data = request.json
-        config_db.update_one({"setting": "rates"}, {"$set": data}, upsert=True)
+        config_db.update_one({"setting": "rates"}, {"$set": request.json}, upsert=True)
         return jsonify({"message": "Rates updated successfully!"})
     else:
         config = config_db.find_one({"setting": "rates"}) or {}
@@ -37,32 +36,28 @@ def handle_labours():
         return jsonify({"message": "Labourer added!"})
     
     else:
-        year_filter = request.args.get('year', 'all')
+        # NEW: 'period' allows "2026" (Year), "2026-04" (Month), or "2026-04-27" (Day)
+        period_filter = request.args.get('period', request.args.get('year', 'all'))
         date_filter = request.args.get('date', datetime.now().strftime("%Y-%m-%d"))
         
-        # --- SUPER SPEED OPTIMIZATION (No more N+1 Queries) ---
         config = config_db.find_one({"setting": "rates"}) or {}
         labours = list(labours_db.find())
         
         att_query = {"status": "present"}
         txn_query = {}
-        if year_filter != 'all':
-            att_query["date"] = {"$regex": f"^{year_filter}"}
-            txn_query["date"] = {"$regex": f"^{year_filter}"}
+        if period_filter != 'all':
+            att_query["date"] = {"$regex": f"^{period_filter}"}
+            txn_query["date"] = {"$regex": f"^{period_filter}"}
             
-        # Fetch ALL records in just 3 trips to the database instead of 200+
         all_attendance = list(attendance_db.find(att_query))
         all_txns = list(transactions_db.find(txn_query))
         today_attendance = list(attendance_db.find({"date": date_filter}))
 
-        # Organize into fast memory dictionaries
         att_dict = {}
-        for a in all_attendance:
-            att_dict.setdefault(a['labour_id'], []).append(a)
+        for a in all_attendance: att_dict.setdefault(a['labour_id'], []).append(a)
             
         txn_dict = {}
-        for t in all_txns:
-            txn_dict.setdefault(t['labour_id'], []).append(t)
+        for t in all_txns: txn_dict.setdefault(t['labour_id'], []).append(t)
             
         today_dict = {a['labour_id']: a for a in today_attendance}
 
