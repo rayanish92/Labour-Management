@@ -10,7 +10,6 @@
         .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        /* Instant click feedback */
         .processing { opacity: 0.5; pointer-events: none; }
     </style>
 </head>
@@ -23,43 +22,39 @@
 
     <div class="max-w-3xl mx-auto px-4">
         
+        <!-- Navigation Tabs -->
         <div class="flex space-x-2 bg-white p-2 rounded-xl shadow-md mb-5 overflow-x-auto">
-            <button onclick="switchTab('tab-admin')" id="btn-admin" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm bg-green-100 text-green-800 transition">⚙️ Admin</button>
+            <button onclick="switchTab('tab-dashboard')" id="btn-dashboard" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm bg-green-100 text-green-800 transition">📊 Dashboard</button>
+            <button onclick="switchTab('tab-admin')" id="btn-admin" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm text-gray-500 hover:bg-gray-100 transition">⚙️ Admin</button>
             <button onclick="switchTab('tab-alltime')" id="btn-alltime" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm text-gray-500 hover:bg-gray-100 transition">👷‍♂️ All-Time</button>
             <button onclick="switchTab('tab-occasional')" id="btn-occasional" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm text-gray-500 hover:bg-gray-100 transition">🌾 Occasional</button>
         </div>
 
+        <!-- Global Search Filters -->
         <div id="searchFilters" class="hidden flex gap-2 mb-4">
             <input type="text" id="searchWorker" onkeyup="renderLabours()" placeholder="🔍 Search worker name..." class="border-2 border-gray-200 p-3 rounded-xl w-full shadow-sm focus:border-green-500 outline-none text-lg">
             <select id="filterYear" onchange="loadData()" class="border-2 border-gray-200 p-3 rounded-xl shadow-sm bg-white font-bold text-green-700 focus:border-green-500 outline-none">
                 <option value="all">All Years</option>
-                <option value="2027">2027 (1433-34)</option>
-                <option value="2026">2026 (1432-33)</option>
-                <option value="2025">2025 (1431-32)</option>
-                <option value="2024">2024 (1430-31)</option>
+                <option value="2027">2027 (1433-34)</option><option value="2026">2026 (1432-33)</option>
+                <option value="2025">2025 (1431-32)</option><option value="2024">2024 (1430-31)</option>
             </select>
         </div>
 
-        <!-- Global Filters with Fully Synced Dual Calendars -->
+        <!-- Global List Filters -->
         <div id="globalFilters" class="hidden bg-white border-2 border-yellow-300 p-4 rounded-2xl shadow-lg mb-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-extrabold text-gray-700 mb-1">📅 English Date</label>
-                    <input type="date" id="attendanceDate" onchange="syncFromEnglish(); loadData();" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold shadow-inner">
+                    <input type="date" id="attendanceDate" onchange="syncFromEnglish(''); loadData();" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold shadow-inner">
                 </div>
                 <div>
-                    <label class="block text-sm font-extrabold text-red-800 mb-1">🗓️ Bengali Date (Bangabda)</label>
+                    <label class="block text-sm font-extrabold text-red-800 mb-1">🗓️ Bengali Date</label>
                     <div class="flex gap-1">
-                        <select id="bengaliDay" onchange="syncFromBengali(); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner"></select>
-                        <select id="bengaliMonth" onchange="syncFromBengali(); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-2/4 shadow-inner">
-                            <option value="1">Baishakh</option><option value="2">Jyeshtha</option>
-                            <option value="3">Ashadh</option><option value="4">Shraban</option>
-                            <option value="5">Bhadra</option><option value="6">Ashwin</option>
-                            <option value="7">Kartik</option><option value="8">Agrahayan</option>
-                            <option value="9">Poush</option><option value="10">Magh</option>
-                            <option value="11">Falgun</option><option value="12">Chaitra</option>
+                        <select id="bengaliDay" onchange="syncFromBengali(''); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner"></select>
+                        <select id="bengaliMonth" onchange="syncFromBengali(''); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-2/4 shadow-inner">
+                            <option value="1">Baishakh</option><option value="2">Jyeshtha</option><option value="3">Ashadh</option><option value="4">Shraban</option><option value="5">Bhadra</option><option value="6">Ashwin</option><option value="7">Kartik</option><option value="8">Agrahayan</option><option value="9">Poush</option><option value="10">Magh</option><option value="11">Falgun</option><option value="12">Chaitra</option>
                         </select>
-                        <select id="bengaliYear" onchange="syncFromBengali(); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner"></select>
+                        <select id="bengaliYear" onchange="syncFromBengali(''); loadData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner"></select>
                     </div>
                 </div>
             </div>
@@ -67,46 +62,124 @@
                 <div>
                     <label class="block text-sm font-extrabold text-blue-800 mb-1">👷‍♂️ Apply All-Time Mode</label>
                     <select id="allTimeMode" class="border-2 border-blue-200 p-2 rounded-lg w-full bg-blue-50 font-bold text-blue-900">
-                        <option value="non_harvest">Normal Day</option>
-                        <option value="harvest">Harvest Day</option>
+                        <option value="non_harvest">Normal Day</option><option value="harvest">Harvest Day</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-extrabold text-orange-800 mb-1">🌾 Apply Occasional Season</label>
                     <select id="attendanceSeason" class="border-2 border-orange-200 p-2 rounded-lg w-full bg-orange-50 font-bold text-orange-900">
-                        <option value="none">None</option>
-                        <option value="boro_chas">Boro Chas</option>
-                        <option value="boro_harvest">Boro Harvest</option>
-                        <option value="borsa_chas">Borsa Chas</option>
-                        <option value="borsa_harvest">Borsa Harvest</option>
+                        <option value="none">None</option><option value="boro_chas">Boro Chas</option><option value="boro_harvest">Boro Harvest</option><option value="borsa_chas">Borsa Chas</option><option value="borsa_harvest">Borsa Harvest</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 1: ADMIN -->
-        <div id="tab-admin" class="tab-content active">
+        <!-- TAB: DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content active">
+            <!-- Dashboard Filters -->
+            <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border-t-8 border-purple-600">
+                <h2 class="font-extrabold text-xl mb-4 text-gray-800">📊 Dashboard Filters</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-extrabold text-gray-700 mb-1">👷‍♂️ Worker Type Filter</label>
+                        <select id="dashWorkerType" onchange="renderDashboard()" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold shadow-inner">
+                            <option value="all">All Workers</option>
+                            <option value="all_time">All-Time Only</option>
+                            <option value="occasional">Occasional Only</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-extrabold text-gray-700 mb-1">⏳ Time Period Format</label>
+                        <select id="dashPeriodType" onchange="toggleDashDateUI(); fetchDashboardData();" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold shadow-inner">
+                            <option value="all">Overall (All Time)</option>
+                            <option value="year">Specific Year</option>
+                            <option value="month">Specific Month</option>
+                            <option value="date">Specific Day</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Dash Calendars -->
+                <div id="dashDateControls" class="hidden grid grid-cols-1 gap-4 pt-4 border-t-2 border-gray-100">
+                    <div>
+                        <label class="block text-sm font-extrabold text-gray-700 mb-1">📅 Base Date for Period</label>
+                        <input type="date" id="dash_attendanceDate" onchange="syncFromEnglish('dash_'); fetchDashboardData();" class="border-2 border-gray-300 p-2 rounded-lg w-full bg-gray-50 text-lg font-bold shadow-inner">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-extrabold text-red-800 mb-1">🗓️ Equivalent Bengali Date</label>
+                        <div class="flex gap-1">
+                            <select id="dash_bengaliDay" onchange="syncFromBengali('dash_'); fetchDashboardData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner"></select>
+                            <select id="dash_bengaliMonth" onchange="syncFromBengali('dash_'); fetchDashboardData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-2/4 shadow-inner">
+                                <option value="1">Baishakh</option><option value="2">Jyeshtha</option><option value="3">Ashadh</option><option value="4">Shraban</option><option value="5">Bhadra</option><option value="6">Ashwin</option><option value="7">Kartik</option><option value="8">Agrahayan</option><option value="9">Poush</option><option value="10">Magh</option><option value="11">Falgun</option><option value="12">Chaitra</option>
+                            </select>
+                            <select id="dash_bengaliYear" onchange="syncFromBengali('dash_'); fetchDashboardData();" class="border-2 border-red-200 p-2 rounded-lg bg-red-50 font-bold text-red-900 w-1/4 shadow-inner"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dash Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <div class="bg-blue-50 p-6 rounded-3xl shadow-lg border-2 border-blue-200">
+                    <h3 class="font-extrabold text-2xl text-blue-900 mb-4">💸 Total Cash</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-blue-100 flex justify-between items-center">
+                            <span class="font-bold text-gray-500 uppercase tracking-wider text-sm">Earned</span>
+                            <span class="font-black text-xl text-blue-700" id="dashCashEarned">₹0</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-red-100 flex justify-between items-center">
+                            <span class="font-bold text-gray-500 uppercase tracking-wider text-sm">Taken (Paid)</span>
+                            <span class="font-black text-xl text-red-600" id="dashCashTaken">₹0</span>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-xl shadow-sm border border-green-300 flex justify-between items-center">
+                            <span class="font-extrabold text-green-900 uppercase tracking-wider">Current Due</span>
+                            <span class="font-black text-2xl text-green-800" id="dashCashDue">₹0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-orange-50 p-6 rounded-3xl shadow-lg border-2 border-orange-200">
+                    <h3 class="font-extrabold text-2xl text-orange-900 mb-4">🍚 Total Rice</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-orange-100 flex justify-between items-center">
+                            <span class="font-bold text-gray-500 uppercase tracking-wider text-sm">Earned</span>
+                            <span class="font-black text-xl text-orange-700" id="dashRiceEarned">0 kg</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-red-100 flex justify-between items-center">
+                            <span class="font-bold text-gray-500 uppercase tracking-wider text-sm">Taken (Given)</span>
+                            <span class="font-black text-xl text-red-600" id="dashRiceTaken">0 kg</span>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-xl shadow-sm border border-green-300 flex justify-between items-center">
+                            <span class="font-extrabold text-green-900 uppercase tracking-wider">Current Due</span>
+                            <span class="font-black text-2xl text-green-800" id="dashRiceDue">0 kg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: ADMIN -->
+        <div id="tab-admin" class="tab-content">
             <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border-t-8 border-gray-800">
                 <h2 class="font-bold text-xl mb-3 text-gray-800">➕ Add New Worker</h2>
                 <div class="flex flex-col gap-3">
                     <input type="text" id="newLabourName" placeholder="Worker Full Name" class="border-2 border-gray-200 p-3 rounded-lg w-full text-lg focus:border-gray-800 outline-none">
                     <div class="flex gap-2">
                         <select id="newLabourType" class="border-2 border-gray-200 p-3 rounded-lg flex-1 text-lg font-bold text-gray-700">
-                            <option value="all_time">All-Time Worker</option>
-                            <option value="occasional">Occasional Worker</option>
+                            <option value="all_time">All-Time</option><option value="occasional">Occasional</option>
                         </select>
-                        <button onclick="addLabour()" class="bg-gray-800 hover:bg-gray-900 text-white px-8 py-3 rounded-lg font-bold shadow-md transition text-lg">Add</button>
+                        <button onclick="addLabour()" class="bg-gray-800 hover:bg-gray-900 text-white px-8 py-3 rounded-lg font-bold shadow-md">Add</button>
                     </div>
                 </div>
             </div>
-
+            
             <h2 class="font-extrabold text-2xl mb-4 text-gray-800 ml-1">⚙️ Set Daily Rates</h2>
             <div class="bg-blue-50 p-5 rounded-2xl shadow-md mb-5 border-2 border-blue-200">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-extrabold text-xl text-blue-900">👷‍♂️ All-Time Rates</h3>
                     <select id="configAllTimeMode" onchange="swapAllTimeConfigInputs()" class="border-2 border-blue-300 p-2 rounded-lg bg-white font-bold text-blue-700 outline-none">
-                        <option value="non_harvest">Normal Day</option>
-                        <option value="harvest">Harvest Day</option>
+                        <option value="non_harvest">Normal Day</option><option value="harvest">Harvest Day</option>
                     </select>
                 </div>
                 <div class="flex gap-4 mb-4">
@@ -119,7 +192,7 @@
                         <input type="number" id="configAllTimeRice" class="border-2 border-blue-200 p-3 rounded-lg w-full mt-1 text-xl font-bold">
                     </div>
                 </div>
-                <button onclick="saveAllTimeRates()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg w-full font-extrabold shadow-md transition text-lg">Save All-Time Rates</button>
+                <button onclick="saveAllTimeRates()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg w-full font-extrabold shadow-md text-lg">Save</button>
             </div>
             
             <div class="bg-orange-50 p-5 rounded-2xl shadow-md mb-6 border-2 border-orange-200">
@@ -134,7 +207,7 @@
                         <input type="number" id="configOccasionalRice" class="border-2 border-orange-200 p-3 rounded-lg w-full mt-1 text-xl font-bold">
                     </div>
                 </div>
-                <button onclick="saveOccasionalRates()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-lg w-full font-extrabold shadow-md transition text-lg">Save Occasional Rates</button>
+                <button onclick="saveOccasionalRates()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-lg w-full font-extrabold shadow-md text-lg">Save</button>
             </div>
         </div>
 
@@ -145,27 +218,34 @@
     <script>
         const API_URL = "https://labour-management-gopa.onrender.com/api"; 
         let allLabours = [];
+        let dashLabours = [];
         let globalConfig = {}; 
+        const bDaysInMonth = [31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 30, 30]; 
 
-        // --- ACCURATE CALENDAR MATH ---
-        // Bengali calendar mapping (Fixed offsets for agricultural panjika)
-        const bDaysInMonth = [31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 30, 30]; // Baishakh to Chaitra lengths
-
+        // --- SHARED CALENDAR LOGIC (For Global and Dashboard) ---
         function initCalendars() {
-            const daySelect = document.getElementById('bengaliDay');
-            for(let i=1; i<=31; i++) { daySelect.innerHTML += `<option value="${i}">${i}</option>`; }
-            
-            const bYearSelect = document.getElementById('bengaliYear');
-            for(let i=1430; i<=1440; i++) { bYearSelect.innerHTML += `<option value="${i}">${i}</option>`; }
+            populateSelectOptions('bengaliDay', 1, 31);
+            populateSelectOptions('dash_bengaliDay', 1, 31);
+            populateSelectOptions('bengaliYear', 1430, 1440);
+            populateSelectOptions('dash_bengaliYear', 1430, 1440);
 
             document.getElementById('attendanceDate').valueAsDate = new Date();
-            syncFromEnglish();
+            document.getElementById('dash_attendanceDate').valueAsDate = new Date();
+            
+            syncFromEnglish('');
+            syncFromEnglish('dash_');
         }
 
-        function syncFromEnglish() {
-            // Converts Gregorian to fixed Bengali format based on April 14 transition
-            const date = new Date(document.getElementById('attendanceDate').value);
-            const startYear = new Date(date.getFullYear(), 3, 14); // April 14
+        function populateSelectOptions(id, start, end) {
+            const el = document.getElementById(id);
+            for(let i=start; i<=end; i++) el.innerHTML += `<option value="${i}">${i}</option>`;
+        }
+
+        function isLeapYear(year) { return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0); }
+
+        function syncFromEnglish(prefix) {
+            const date = new Date(document.getElementById(prefix + 'attendanceDate').value);
+            const startYear = new Date(date.getFullYear(), 3, 14); 
             
             let bYear = date.getFullYear() - 593;
             let diffTime = date.getTime() - startYear.getTime();
@@ -177,47 +257,37 @@
             }
 
             let daysDiff = Math.floor(diffTime / (1000 * 3600 * 24));
-            
             let bMonth = 0;
-            while (bMonth < 12 && daysDiff >= bDaysInMonth[bMonth]) {
-                daysDiff -= bDaysInMonth[bMonth];
-                bMonth++;
-            }
-            // Leap year fix for Falgun (11th month)
-            if (bMonth === 10 && isLeapYear(date.getFullYear())) bDaysInMonth[10] = 31;
-            else bDaysInMonth[10] = 30;
+            while (bMonth < 12 && daysDiff >= bDaysInMonth[bMonth]) { daysDiff -= bDaysInMonth[bMonth]; bMonth++; }
+            
+            if (bMonth === 10 && isLeapYear(date.getFullYear())) bDaysInMonth[10] = 31; else bDaysInMonth[10] = 30;
 
-            document.getElementById('bengaliYear').value = bYear;
-            document.getElementById('bengaliMonth').value = bMonth + 1;
-            document.getElementById('bengaliDay').value = daysDiff + 1;
+            document.getElementById(prefix + 'bengaliYear').value = bYear;
+            document.getElementById(prefix + 'bengaliMonth').value = bMonth + 1;
+            document.getElementById(prefix + 'bengaliDay').value = daysDiff + 1;
         }
 
-        function syncFromBengali() {
-            // Converts Bengali back to Gregorian exactly
-            const bYear = parseInt(document.getElementById('bengaliYear').value);
-            const bMonth = parseInt(document.getElementById('bengaliMonth').value) - 1;
-            const bDay = parseInt(document.getElementById('bengaliDay').value) - 1;
+        function syncFromBengali(prefix) {
+            const bYear = parseInt(document.getElementById(prefix + 'bengaliYear').value);
+            const bMonth = parseInt(document.getElementById(prefix + 'bengaliMonth').value) - 1;
+            const bDay = parseInt(document.getElementById(prefix + 'bengaliDay').value) - 1;
 
             const eYear = bYear + 593;
-            const baseDate = new Date(eYear, 3, 14); // April 14th of that Gregorian year
+            const baseDate = new Date(eYear, 3, 14); 
             
             if (isLeapYear(eYear+1)) bDaysInMonth[10] = 31; else bDaysInMonth[10] = 30;
 
             let daysToAdd = 0;
-            for(let i=0; i<bMonth; i++) { daysToAdd += bDaysInMonth[i]; }
+            for(let i=0; i<bMonth; i++) daysToAdd += bDaysInMonth[i];
             daysToAdd += bDay;
 
             baseDate.setDate(baseDate.getDate() + daysToAdd);
-            
-            // Format to YYYY-MM-DD for input
             const offset = baseDate.getTimezoneOffset()
             const fixedDate = new Date(baseDate.getTime() - (offset*60*1000))
-            document.getElementById('attendanceDate').value = fixedDate.toISOString().split('T')[0];
+            document.getElementById(prefix + 'attendanceDate').value = fixedDate.toISOString().split('T')[0];
         }
 
-        function isLeapYear(year) { return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0); }
-        // ----------------------------------------------------------------
-
+        // --- TAB & DASHBOARD LOGIC ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('[id^="btn-"]').forEach(b => {
@@ -228,12 +298,64 @@
             document.getElementById(btnId).classList.remove('text-gray-500');
             document.getElementById(btnId).classList.add('bg-green-100', 'text-green-800');
 
-            const filters = document.getElementById('globalFilters');
+            const listFilters = document.getElementById('globalFilters');
             const searchUI = document.getElementById('searchFilters');
-            if (tabId === 'tab-admin') { filters.classList.add('hidden'); searchUI.classList.add('hidden'); } 
-            else { filters.classList.remove('hidden'); searchUI.classList.remove('hidden'); }
+            
+            if (tabId === 'tab-alltime' || tabId === 'tab-occasional') {
+                listFilters.classList.remove('hidden'); searchUI.classList.remove('hidden');
+            } else {
+                listFilters.classList.add('hidden'); searchUI.classList.add('hidden');
+            }
+
+            if (tabId === 'tab-dashboard') fetchDashboardData();
         }
 
+        function toggleDashDateUI() {
+            const type = document.getElementById('dashPeriodType').value;
+            const ui = document.getElementById('dashDateControls');
+            if (type === 'all') ui.classList.add('hidden');
+            else ui.classList.remove('hidden');
+        }
+
+        async function fetchDashboardData() {
+            const periodType = document.getElementById('dashPeriodType').value;
+            const fullDate = document.getElementById('dash_attendanceDate').value; // e.g. 2026-04-27
+            let period = 'all';
+
+            if (periodType === 'year') period = fullDate.substring(0, 4);
+            else if (periodType === 'month') period = fullDate.substring(0, 7);
+            else if (periodType === 'date') period = fullDate;
+
+            try {
+                const res = await fetch(`${API_URL}/labours?period=${period}`);
+                dashLabours = await res.json();
+                renderDashboard();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderDashboard() {
+            const wType = document.getElementById('dashWorkerType').value;
+            let filtered = dashLabours;
+            if (wType !== 'all') filtered = dashLabours.filter(l => l.type === wType);
+
+            let cEarned = 0, cTaken = 0, cDue = 0;
+            let rEarned = 0, rTaken = 0, rDue = 0;
+
+            filtered.forEach(l => {
+                cEarned += l.amount_earned; cTaken += l.amount_taken; cDue += l.amount_due;
+                rEarned += l.rice_earned; rTaken += l.rice_taken; rDue += l.rice_due;
+            });
+
+            document.getElementById('dashCashEarned').innerText = `₹${cEarned}`;
+            document.getElementById('dashCashTaken').innerText = `₹${cTaken}`;
+            document.getElementById('dashCashDue').innerText = `₹${cDue}`;
+            
+            document.getElementById('dashRiceEarned').innerText = `${rEarned} kg`;
+            document.getElementById('dashRiceTaken').innerText = `${rTaken} kg`;
+            document.getElementById('dashRiceDue').innerText = `${rDue} kg`;
+        }
+
+        // --- EXISTING DATA LOGIC ---
         async function loadData() {
             try {
                 const confRes = await fetch(`${API_URL}/config`);
@@ -244,13 +366,14 @@
 
                 const year = document.getElementById('filterYear').value;
                 const date = document.getElementById('attendanceDate').value;
-                const labRes = await fetch(`${API_URL}/labours?year=${year}&date=${date}`);
+                const labRes = await fetch(`${API_URL}/labours?period=${year}&date=${date}`);
                 allLabours = await labRes.json();
                 
                 const allTimeWorker = allLabours.find(l => l.type === 'all_time' && l.current_mode !== 'none');
                 if(allTimeWorker) { document.getElementById('allTimeMode').value = allTimeWorker.current_mode; }
 
                 renderLabours();
+                if(document.getElementById('tab-dashboard').classList.contains('active')) fetchDashboardData();
             } catch (err) { console.log("Waiting for connection..."); }
         }
 
@@ -269,23 +392,16 @@
             const searchTerm = document.getElementById('searchWorker').value.toLowerCase();
             const filteredLabours = allLabours.filter(l => l.name.toLowerCase().includes(searchTerm));
             
-            const allTime = filteredLabours.filter(l => l.type === 'all_time');
-            const occasional = filteredLabours.filter(l => l.type === 'occasional');
-
-            document.getElementById('list-alltime').innerHTML = allTime.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
-            document.getElementById('list-occasional').innerHTML = occasional.map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
+            document.getElementById('list-alltime').innerHTML = filteredLabours.filter(l => l.type === 'all_time').map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
+            document.getElementById('list-occasional').innerHTML = filteredLabours.filter(l => l.type === 'occasional').map(createLabourCard).join('') || '<p class="text-center text-gray-500 mt-10">No workers found.</p>';
         }
 
         function createLabourCard(l) {
-            const isAllTime = l.type === 'all_time';
-            const color = isAllTime ? 'blue' : 'orange';
-            
+            const isAllTime = l.type === 'all_time'; const color = isAllTime ? 'blue' : 'orange';
             let daysText = `🗓️ ${l.days_worked} Days Present`;
             if (isAllTime) { daysText = `🗓️ ${l.days_worked} Days (🌾 ${l.harvest_days} Harvest | 🚜 ${l.non_harvest_days} Normal)`; }
 
-            const isPresent = l.current_status === 'present';
-            const isAbsent = l.current_status === 'absent';
-            
+            const isPresent = l.current_status === 'present'; const isAbsent = l.current_status === 'absent';
             let presentBtnLabel = "✔️ Mark Present";
             if (isPresent) {
                 if (isAllTime && l.current_mode === 'harvest') presentBtnLabel = "✔️ Present (Harvest)";
@@ -294,8 +410,8 @@
                 else presentBtnLabel = "✔️ Present";
             }
 
-            const btnPresent = isPresent ? "bg-green-700 text-white shadow-inner scale-95 border-2 border-green-900" : "bg-white text-green-700 border-2 border-green-300 hover:bg-green-50 shadow-sm";
-            const btnAbsent = isAbsent ? "bg-red-700 text-white shadow-inner scale-95 border-2 border-red-900" : "bg-white text-red-700 border-2 border-red-300 hover:bg-red-50 shadow-sm";
+            const btnPresent = isPresent ? "bg-green-700 text-white shadow-inner border-2 border-green-900" : "bg-white text-green-700 border-2 border-green-300";
+            const btnAbsent = isAbsent ? "bg-red-700 text-white shadow-inner border-2 border-red-900" : "bg-white text-red-700 border-2 border-red-300";
 
             return `
             <div id="card-${l.id}" class="bg-white p-6 rounded-3xl shadow-lg mb-5 border-l-8 border-${color}-500 relative transition-opacity duration-200">
@@ -305,29 +421,27 @@
                 </div>
                 <div class="mb-5">
                     <h3 class="font-extrabold text-2xl text-gray-800 pr-16 tracking-tight">${l.name}</h3>
-                    <span class="inline-block mt-2 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold shadow-sm border border-gray-300">${daysText}</span>
+                    <span class="inline-block mt-2 text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold border border-gray-300">${daysText}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-2xl mb-5 border border-gray-200 shadow-inner">
                     <div>
                         <p class="text-gray-500 text-sm uppercase font-extrabold tracking-wider">CASH DUE</p>
                         <p class="font-black text-2xl text-blue-700 mt-1">₹${l.amount_due}</p>
-                        <p class="text-sm font-bold text-gray-600 mt-2">Earned: ₹${l.amount_earned}</p>
-                        <p class="text-sm font-semibold text-red-500">Taken: ₹${l.amount_taken}</p>
+                        <p class="text-sm font-bold text-gray-600 mt-2">Earned: ₹${l.amount_earned} | Taken: ₹${l.amount_taken}</p>
                     </div>
                     <div>
                         <p class="text-gray-500 text-sm uppercase font-extrabold tracking-wider">RICE DUE</p>
                         <p class="font-black text-2xl text-orange-700 mt-1">${l.rice_due} kg</p>
-                        <p class="text-sm font-bold text-gray-600 mt-2">Earned: ${l.rice_earned}kg</p>
-                        <p class="text-sm font-semibold text-red-500">Taken: ${l.rice_taken}kg</p>
+                        <p class="text-sm font-bold text-gray-600 mt-2">Earned: ${l.rice_earned}kg | Taken: ${l.rice_taken}kg</p>
                     </div>
                 </div>
                 <div class="flex gap-3 mb-4">
-                    <button onclick="markAttendance(this, '${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">${presentBtnLabel}</button>
-                    <button onclick="markAttendance(this, '${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-3 rounded-xl text-base font-extrabold transition-all duration-200">❌ Absent</button>
+                    <button onclick="markAttendance(this, '${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold">${presentBtnLabel}</button>
+                    <button onclick="markAttendance(this, '${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-3 rounded-xl text-base font-extrabold">❌ Absent</button>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 bg-blue-100 text-blue-800 py-3 rounded-xl text-sm font-extrabold hover:bg-blue-200 transition shadow-sm">💸 Give Advance</button>
-                    <button onclick="addTransaction('${l.id}', 'rice')" class="flex-1 bg-orange-100 text-orange-800 py-3 rounded-xl text-sm font-extrabold hover:bg-orange-200 transition shadow-sm">🍚 Give Rice</button>
+                    <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 bg-blue-100 text-blue-800 py-3 rounded-xl font-extrabold shadow-sm">💸 Give Advance</button>
+                    <button onclick="addTransaction('${l.id}', 'rice')" class="flex-1 bg-orange-100 text-orange-800 py-3 rounded-xl font-extrabold shadow-sm">🍚 Give Rice</button>
                 </div>
             </div>`;
         }
@@ -336,19 +450,17 @@
             const mode = document.getElementById('configAllTimeMode').value;
             const wage = document.getElementById('configAllTimeWage').value; const rice = document.getElementById('configAllTimeRice').value;
             const payload = mode === 'harvest' ? { all_time_wage_harvest: wage, all_time_rice_harvest: rice } : { all_time_wage_non_harvest: wage, all_time_rice_non_harvest: rice };
-            await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            alert(`All-Time (${mode}) Rates Saved!`); loadData();
+            await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }); loadData();
         }
 
         async function saveOccasionalRates() {
             const payload = { occasional_wage: document.getElementById('configOccasionalWage').value, occasional_rice: document.getElementById('configOccasionalRice').value };
-            await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            alert("Occasional Rates Saved!"); loadData();
+            await fetch(`${API_URL}/config`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }); loadData();
         }
 
         async function addLabour() {
             const name = document.getElementById('newLabourName').value; const type = document.getElementById('newLabourType').value;
-            if(!name) return alert("Please enter a name");
+            if(!name) return;
             await fetch(`${API_URL}/labours`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, type}) });
             document.getElementById('newLabourName').value = ''; loadData(); switchTab(type === 'all_time' ? 'tab-alltime' : 'tab-occasional');
         }
@@ -360,40 +472,30 @@
         }
 
         async function deleteLabour(id, name) {
-            if (!confirm(`⚠️ Delete ${name} and ALL their history forever?`)) return;
+            if (!confirm(`⚠️ Delete ${name} and ALL history?`)) return;
             await fetch(`${API_URL}/labours/${id}`, { method: 'DELETE' }); loadData();
         }
 
-        // UPDATED: Now provides instant visual feedback while it saves instantly in the background!
         async function markAttendance(btn, id, status) {
-            const card = document.getElementById(`card-${id}`);
-            card.classList.add('processing'); // Grays out card slightly so user knows it clicked
-
-            const date = document.getElementById('attendanceDate').value;
-            const season = document.getElementById('attendanceSeason').value;
-            const allTimeMode = document.getElementById('allTimeMode').value;
-            
+            document.getElementById(`card-${id}`).classList.add('processing');
             await fetch(`${API_URL}/attendance`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({labour_id: id, date, status, season, all_time_mode: allTimeMode})
+                body: JSON.stringify({
+                    labour_id: id, date: document.getElementById('attendanceDate').value, status, 
+                    season: document.getElementById('attendanceSeason').value, all_time_mode: document.getElementById('allTimeMode').value
+                })
             });
-            await loadData(); // Fetch the newly calculated totals in a fraction of a second
-            card.classList.remove('processing');
+            await loadData(); document.getElementById(`card-${id}`).classList.remove('processing');
         }
 
         async function addTransaction(id, type) {
-            const amount = prompt(`Enter ${type === 'money' ? 'Cash Amount (₹)' : 'Rice Amount (Kg)'} given:`);
+            const amount = prompt(`Enter ${type === 'money' ? 'Cash (₹)' : 'Rice (Kg)'} given:`);
             if(!amount || isNaN(amount)) return;
-            await fetch(`${API_URL}/transactions`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({labour_id: id, type, amount}) });
-            loadData();
+            await fetch(`${API_URL}/transactions`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({labour_id: id, type, amount}) }); loadData();
         }
 
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-        let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').classList.remove('hidden'); });
-        function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { deferredPrompt = null; }); } }
-
-        initCalendars(); 
-        loadData();
+        initCalendars(); loadData(); switchTab('tab-dashboard');
     </script>
 </body>
 </html>
