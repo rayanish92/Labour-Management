@@ -4,10 +4,10 @@
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4CAF50",
+  "theme_color": "#166534",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2664/2664654.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/1995/1995470.png",
       "sizes": "512x512",
       "type": "image/png"
     }
