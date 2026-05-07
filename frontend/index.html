@@ -22,7 +22,6 @@
 
     <div class="max-w-3xl mx-auto px-4">
         
-        <!-- Navigation Tabs -->
         <div class="flex space-x-2 bg-white p-2 rounded-xl shadow-md mb-5 overflow-x-auto">
             <button onclick="switchTab('tab-dashboard')" id="btn-dashboard" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm bg-green-100 text-green-800 transition">📊 Dashboard</button>
             <button onclick="switchTab('tab-admin')" id="btn-admin" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm text-gray-500 hover:bg-gray-100 transition">⚙️ Admin</button>
@@ -30,7 +29,6 @@
             <button onclick="switchTab('tab-occasional')" id="btn-occasional" class="flex-1 py-2 px-3 rounded-lg font-bold text-sm text-gray-500 hover:bg-gray-100 transition">🌾 Occasional</button>
         </div>
 
-        <!-- Global Search Filters -->
         <div id="searchFilters" class="hidden flex gap-2 mb-4">
             <input type="text" id="searchWorker" onkeyup="renderLabours()" placeholder="🔍 Search worker name..." class="border-2 border-gray-200 p-3 rounded-xl w-full shadow-sm focus:border-green-500 outline-none text-lg">
             <select id="filterYear" onchange="loadData()" class="border-2 border-gray-200 p-3 rounded-xl shadow-sm bg-white font-bold text-green-700 focus:border-green-500 outline-none">
@@ -40,7 +38,6 @@
             </select>
         </div>
 
-        <!-- Global List Filters -->
         <div id="globalFilters" class="hidden bg-white border-2 border-yellow-300 p-4 rounded-2xl shadow-lg mb-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -76,7 +73,6 @@
 
         <!-- TAB: DASHBOARD -->
         <div id="tab-dashboard" class="tab-content active">
-            <!-- Dashboard Filters -->
             <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border-t-8 border-purple-600">
                 <h2 class="font-extrabold text-xl mb-4 text-gray-800">📊 Dashboard Filters</h2>
                 
@@ -100,7 +96,6 @@
                     </div>
                 </div>
 
-                <!-- Dash Calendars -->
                 <div id="dashDateControls" class="hidden grid grid-cols-1 gap-4 pt-4 border-t-2 border-gray-100">
                     <div>
                         <label class="block text-sm font-extrabold text-gray-700 mb-1">📅 Base Date for Period</label>
@@ -119,7 +114,6 @@
                 </div>
             </div>
 
-            <!-- Dash Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <div class="bg-blue-50 p-6 rounded-3xl shadow-lg border-2 border-blue-200">
                     <h3 class="font-extrabold text-2xl text-blue-900 mb-4">💸 Total Cash</h3>
@@ -222,18 +216,14 @@
         let globalConfig = {}; 
         const bDaysInMonth = [31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 30, 30]; 
 
-        // --- SHARED CALENDAR LOGIC (For Global and Dashboard) ---
         function initCalendars() {
-            populateSelectOptions('bengaliDay', 1, 31);
-            populateSelectOptions('dash_bengaliDay', 1, 31);
-            populateSelectOptions('bengaliYear', 1430, 1440);
-            populateSelectOptions('dash_bengaliYear', 1430, 1440);
+            populateSelectOptions('bengaliDay', 1, 31); populateSelectOptions('dash_bengaliDay', 1, 31);
+            populateSelectOptions('bengaliYear', 1430, 1440); populateSelectOptions('dash_bengaliYear', 1430, 1440);
 
             document.getElementById('attendanceDate').valueAsDate = new Date();
             document.getElementById('dash_attendanceDate').valueAsDate = new Date();
             
-            syncFromEnglish('');
-            syncFromEnglish('dash_');
+            syncFromEnglish(''); syncFromEnglish('dash_');
         }
 
         function populateSelectOptions(id, start, end) {
@@ -245,7 +235,6 @@
 
         function syncFromEnglish(prefix) {
             const date = new Date(document.getElementById(prefix + 'attendanceDate').value);
-            // FIX: Anchor Pohela Boishakh strictly to April 15 for Indian Surya Siddhanta accuracy
             const startYear = new Date(date.getFullYear(), 3, 15); 
             
             let bYear = date.getFullYear() - 593;
@@ -274,7 +263,7 @@
             const bDay = parseInt(document.getElementById(prefix + 'bengaliDay').value) - 1;
 
             const eYear = bYear + 593;
-            const baseDate = new Date(eYear, 3, 15); // Anchor to April 15
+            const baseDate = new Date(eYear, 3, 15); 
             
             if (isLeapYear(eYear+1)) bDaysInMonth[10] = 31; else bDaysInMonth[10] = 30;
 
@@ -288,7 +277,6 @@
             document.getElementById(prefix + 'attendanceDate').value = fixedDate.toISOString().split('T')[0];
         }
 
-        // --- TAB & DASHBOARD LOGIC ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('[id^="btn-"]').forEach(b => {
@@ -314,13 +302,12 @@
         function toggleDashDateUI() {
             const type = document.getElementById('dashPeriodType').value;
             const ui = document.getElementById('dashDateControls');
-            if (type === 'all') ui.classList.add('hidden');
-            else ui.classList.remove('hidden');
+            if (type === 'all') ui.classList.add('hidden'); else ui.classList.remove('hidden');
         }
 
         async function fetchDashboardData() {
             const periodType = document.getElementById('dashPeriodType').value;
-            const fullDate = document.getElementById('dash_attendanceDate').value; // e.g. 2026-04-27
+            const fullDate = document.getElementById('dash_attendanceDate').value;
             let period = 'all';
 
             if (periodType === 'year') period = fullDate.substring(0, 4);
@@ -356,7 +343,6 @@
             document.getElementById('dashRiceDue').innerText = `${rDue} kg`;
         }
 
-        // --- EXISTING DATA LOGIC ---
         async function loadData() {
             try {
                 const confRes = await fetch(`${API_URL}/config`);
@@ -402,17 +388,23 @@
             let daysText = `🗓️ ${l.days_worked} Days Present`;
             if (isAllTime) { daysText = `🗓️ ${l.days_worked} Days (🌾 ${l.harvest_days} Harvest | 🚜 ${l.non_harvest_days} Normal)`; }
 
-            const isPresent = l.current_status === 'present'; const isAbsent = l.current_status === 'absent';
-            let presentBtnLabel = "✔️ Mark Present";
-            if (isPresent) {
-                if (isAllTime && l.current_mode === 'harvest') presentBtnLabel = "✔️ Present (Harvest)";
-                else if (isAllTime && l.current_mode === 'non_harvest') presentBtnLabel = "✔️ Present (Normal)";
-                else if (!isAllTime && l.current_season !== 'none') presentBtnLabel = `✔️ Present (${l.current_season.replace('_', ' ')})`;
-                else presentBtnLabel = "✔️ Present";
-            }
+            // DYNAMIC BUTTON LOGIC INCLUDES HALF DAY
+            const isPresent = l.current_status === 'present'; 
+            const isHalfDay = l.current_status === 'half_day';
+            const isAbsent = l.current_status === 'absent';
+            
+            let modeString = "";
+            if (isAllTime && l.current_mode === 'harvest') modeString = " (Harvest)";
+            else if (isAllTime && l.current_mode === 'non_harvest') modeString = " (Normal)";
+            else if (!isAllTime && l.current_season !== 'none') modeString = ` (${l.current_season.replace('_', ' ')})`;
 
-            const btnPresent = isPresent ? "bg-green-700 text-white shadow-inner border-2 border-green-900" : "bg-white text-green-700 border-2 border-green-300";
-            const btnAbsent = isAbsent ? "bg-red-700 text-white shadow-inner border-2 border-red-900" : "bg-white text-red-700 border-2 border-red-300";
+            let presentBtnLabel = isPresent ? `✔️ Present${modeString}` : "Present";
+            let halfBtnLabel = isHalfDay ? `🌗 Half Day${modeString}` : "Half Day";
+            let absentBtnLabel = isAbsent ? `❌ Absent` : "Absent";
+
+            const btnPresent = isPresent ? "bg-green-700 text-white shadow-inner border-2 border-green-900" : "bg-white text-green-700 border-2 border-green-300 hover:bg-green-50";
+            const btnHalf = isHalfDay ? "bg-yellow-600 text-white shadow-inner border-2 border-yellow-800" : "bg-white text-yellow-600 border-2 border-yellow-300 hover:bg-yellow-50";
+            const btnAbsent = isAbsent ? "bg-red-700 text-white shadow-inner border-2 border-red-900" : "bg-white text-red-700 border-2 border-red-300 hover:bg-red-50";
 
             return `
             <div id="card-${l.id}" class="bg-white p-6 rounded-3xl shadow-lg mb-5 border-l-8 border-${color}-500 relative transition-opacity duration-200">
@@ -436,9 +428,11 @@
                         <p class="text-sm font-bold text-gray-600 mt-2">Earned: ${l.rice_earned}kg | Taken: ${l.rice_taken}kg</p>
                     </div>
                 </div>
-                <div class="flex gap-3 mb-4">
-                    <button onclick="markAttendance(this, '${l.id}', 'present')" class="flex-1 ${btnPresent} py-3 rounded-xl text-base font-extrabold">${presentBtnLabel}</button>
-                    <button onclick="markAttendance(this, '${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-3 rounded-xl text-base font-extrabold">❌ Absent</button>
+                <!-- CHANGED TO 3 BUTTONS -->
+                <div class="flex gap-2 mb-4">
+                    <button onclick="markAttendance(this, '${l.id}', 'present')" class="flex-1 ${btnPresent} py-2 rounded-xl text-sm font-extrabold transition-all duration-200">${presentBtnLabel}</button>
+                    <button onclick="markAttendance(this, '${l.id}', 'half_day')" class="flex-1 ${btnHalf} py-2 rounded-xl text-sm font-extrabold transition-all duration-200">${halfBtnLabel}</button>
+                    <button onclick="markAttendance(this, '${l.id}', 'absent')" class="flex-1 ${btnAbsent} py-2 rounded-xl text-sm font-extrabold transition-all duration-200">${absentBtnLabel}</button>
                 </div>
                 <div class="flex gap-3">
                     <button onclick="addTransaction('${l.id}', 'money')" class="flex-1 bg-blue-100 text-blue-800 py-3 rounded-xl font-extrabold shadow-sm">💸 Give Advance</button>
