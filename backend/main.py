@@ -36,14 +36,14 @@ def handle_labours():
         return jsonify({"message": "Labourer added!"})
     
     else:
-        # NEW: 'period' allows "2026" (Year), "2026-04" (Month), or "2026-04-27" (Day)
         period_filter = request.args.get('period', request.args.get('year', 'all'))
         date_filter = request.args.get('date', datetime.now().strftime("%Y-%m-%d"))
         
         config = config_db.find_one({"setting": "rates"}) or {}
         labours = list(labours_db.find())
         
-        att_query = {"status": "present"}
+        # CHANGED: Now pulls both full present and half days into memory
+        att_query = {"status": {"$in": ["present", "half_day"]}}
         txn_query = {}
         if period_filter != 'all':
             att_query["date"] = {"$regex": f"^{period_filter}"}
@@ -73,21 +73,29 @@ def handle_labours():
             current_mode = l_today.get('all_time_mode', 'none')
             current_season = l_today.get('season', 'none')
             
-            att_harvest = 0
-            att_non = 0
-            total_days = len(l_att)
+            effective_harvest = 0.0
+            effective_non = 0.0
+            total_days = 0.0
+            
+            # CHANGED: Applies a 0.5 multiplier to half days
+            for a in l_att:
+                weight = 0.5 if a.get('status') == 'half_day' else 1.0
+                total_days += weight
+                
+                if lab["type"] == "all_time":
+                    if a.get('all_time_mode') == 'harvest':
+                        effective_harvest += weight
+                    else:
+                        effective_non += weight
             
             if lab["type"] == "all_time":
-                att_harvest = sum(1 for a in l_att if a.get('all_time_mode') == 'harvest')
-                att_non = total_days - att_harvest
-                
                 wage_h = float(config.get("all_time_wage_harvest", 0))
                 rice_h = float(config.get("all_time_rice_harvest", 0))
                 wage_n = float(config.get("all_time_wage_non_harvest", 0))
                 rice_n = float(config.get("all_time_rice_non_harvest", 0))
                 
-                amount_earned = (att_harvest * wage_h) + (att_non * wage_n)
-                rice_earned = (att_harvest * rice_h) + (att_non * rice_n)
+                amount_earned = (effective_harvest * wage_h) + (effective_non * wage_n)
+                rice_earned = (effective_harvest * rice_h) + (effective_non * rice_n)
             else:
                 amount_earned = total_days * float(config.get("occasional_wage", 0))
                 rice_earned = total_days * float(config.get("occasional_rice", 0))
@@ -98,7 +106,7 @@ def handle_labours():
             results.append({
                 "id": lab_id, "name": lab["name"], "type": lab["type"], 
                 "current_status": current_status, "current_mode": current_mode, "current_season": current_season,
-                "days_worked": total_days, "harvest_days": att_harvest, "non_harvest_days": att_non,
+                "days_worked": total_days, "harvest_days": effective_harvest, "non_harvest_days": effective_non,
                 "amount_earned": amount_earned, "amount_taken": amount_taken, "amount_due": amount_earned - amount_taken, 
                 "rice_earned": rice_earned, "rice_taken": rice_taken, "rice_due": rice_earned - rice_taken
             })
